@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"  
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    x:Class="TaskManagement.AppShell"
+    xmlns:view="clr-namespace:TaskManagement.View"
+    Shell.NavBarIsVisible="True"
+    Shell.FlyoutBehavior="Flyout"
+    FlyoutBackgroundColor="#dad4e9" >
+    <!-- Shell.TitleColor="White"-->
+    <!--Shell.BackgroundColor="#261474"-->
+    <Shell.TitleView>
+        <Grid Padding="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Label x:Name="pageTitleLabel" TextColor="White"
+ FontSize="20" FontAttributes="Bold"
+VerticalOptions="Center"
+Grid.Column="0" />
+            
+            <Image Source="sprinty_logo.png"
+               HeightRequest="40"
+               Aspect="AspectFit"
+               HorizontalOptions="End"
+               Grid.Column="1" />
+        </Grid>
+    </Shell.TitleView>
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior IsVisible="True" />
+    </Shell.BackButtonBehavior>
+    <Shell.Resources>
+        <!-- Change back arrow and flyout icon tint -->
+        <Style TargetType="NavigationPage">
+            <Setter Property="BarBackgroundColor" Value="White"/>
+            <Setter Property="BarTextColor" Value="White"/>
+        </Style>
+    </Shell.Resources>
+
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <!--Shell.BackgroundColor="#D88C00"-->
+            <Grid ColumnDefinitions="Auto,*" Padding="10,14">
+                <Image Grid.Column="0" Source="{Binding FlyoutIcon}" HeightRequest="32" WidthRequest="32" BackgroundColor="Transparent" />
+                <Label Grid.Column="1" Text="{Binding Title}" FontSize="16" VerticalOptions="Center" Padding="10,0" TextColor="#4E342E" />
+            </Grid>
+        </DataTemplate>
+    </Shell.ItemTemplate>
+
+
+
+
+    <!--Shell.FlyoutBehavior="Disabled"-->
+    <FlyoutItem Title="Home" FlyoutIcon="home.jpg"
+                Route="MainPage" >
+       
+        <ShellContent ContentTemplate="{DataTemplate view:MainPage}" >
+            
+        </ShellContent>
+
+    </FlyoutItem>
+    <!-- Define Flyout Items -->
+        <FlyoutItem Title="Task Types"
+                FlyoutIcon="task.jpg"
+                Route="TaskTypePage">
+            <ShellContent ContentTemplate="{DataTemplate view:TaskTypePage}" />
+        </FlyoutItem>
+
+        <FlyoutItem Title="Settings"
+                FlyoutIcon="settings.jpg"
+                Route="SettingPage">
+            <ShellContent ContentTemplate="{DataTemplate view:SettingPage}" />
+        </FlyoutItem>
+
+        <FlyoutItem Title="Backup / Restore"
+                FlyoutIcon="backup.jpg"
+                Route="BackupRestorePage">
+            <ShellContent ContentTemplate="{DataTemplate view:BackupRestorePage}" />
+        </FlyoutItem>
+
+</Shell>
+
+ 
+
+

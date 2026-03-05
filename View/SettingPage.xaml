@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Title="Settings"
+             x:Class="TaskManagement.View.SettingPage">
+    <Frame Padding="10" MaximumWidthRequest="450" MaximumHeightRequest="{OnPlatform iOS=900, Android=900, WinUI=350}" Margin="10,0,10,0" BorderColor="{OnPlatform iOS=Transparent, Android=Transparent, WinUI=#4E342E}" CornerRadius="10" HasShadow="True" Background="{DynamicResource SettingFrameBgColor}"  >
+        <Grid HorizontalOptions="Fill" VerticalOptions="{OnPlatform iOS=Start, Android=Start, WinUI=Fill}" >
+            <VerticalStackLayout>
+                <VerticalStackLayout  VerticalOptions="Start"  HorizontalOptions="Start" Padding="0,0,0,10">
+                    <Label FontAttributes="Bold" WidthRequest="{OnPlatform iOS=160, Android=190, WinUI=230}" Margin="0,10,10,10"   TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}"  Text="List to view at Startup : " />
+                    <Border  StrokeShape="RoundRectangle 6" Stroke="{DynamicResource ButtonBackgroundColor}" Background="{DynamicResource ControlBackgroundColor}" Padding="1">
+                        <Picker Margin="0" ItemsSource="{Binding TaskTypes}" ItemDisplayBinding="{Binding DisplayText}"  SelectedItem="{Binding SelectedTaskType}" HorizontalOptions="Start" TextColor="{AppThemeBinding  Light=#00000,Dark=#000000}" />
+                    </Border>
+                </VerticalStackLayout>
+                <HorizontalStackLayout Margin="0,0,0,30" VerticalOptions="Fill" HorizontalOptions="Start">
+                    <Label FontAttributes="Bold" WidthRequest="{OnPlatform iOS=160, Android=190, WinUI=230}" Margin="0,10,10,0" TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" Text="Display Quick Task : " />
+                    <Switch Scale="{OnPlatform iOS=1.0, Android=1.0, WinUI=1.5}"  WidthRequest="{OnPlatform iOS=30, Android=30, WinUI=90}"  IsToggled="{Binding ShowQuickTask, Mode=TwoWay}" HorizontalOptions="End" />
+            </HorizontalStackLayout>
+                <HorizontalStackLayout Margin="0,0,0,30" VerticalOptions="Fill" HorizontalOptions="Start">
+                    <Label FontAttributes="Bold"  WidthRequest="{OnPlatform iOS=160, Android=190, WinUI=230}" Margin="0,10,10,0" TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" Text="Display Completed Tasks : " />
+                    <Switch Scale="{OnPlatform iOS=1.0, Android=1.0, WinUI=1.5}" WidthRequest="{OnPlatform iOS=30, Android=30, WinUI=90}"  IsToggled="{Binding ShowCompletedTask, Mode=TwoWay}" HorizontalOptions="End" />
+            </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Grid>
+    </Frame>
+</ContentPage>

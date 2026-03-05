@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "330642758777",
+    "project_id": "sprinty-cded8",
+    "storage_bucket": "sprinty-cded8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330642758777:android:4d13d20b0b1972ebfd48a8",
+        "android_client_info": {
+          "package_name": "com.prodigy.sprinty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJkcrWu6U49gLeXUSeN3KAY-Jt2uJq_6E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:dg="clr-namespace:Maui.DataGrid;assembly=Maui.DataGrid"
+             xmlns:local="clr-namespace:TaskManagement.View"
+             xmlns:model="clr-namespace:TaskManagement.Model"
+             x:Class="TaskManagement.View.TaskTypePage"
+             xmlns:viewmodel="clr-namespace:TaskManagement.ViewModel" 
+             Title="Task Type List"
+             x:DataType="{x:Type viewmodel:TaskTypeViewModel}">
+    <ContentPage.Resources>
+        <local:TaskTypeToVisibilityConverter x:Key="TaskTypeToVisibilityConverter" />
+    </ContentPage.Resources>
+    <!--<RefreshView IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}" Command="{Binding GetTaskTypesCommand}" >-->
+
+    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="0" RowDefinitions="Auto,*"  RowSpacing="0" >
+
+        <CollectionView  Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"  Margin="8,8,8,8"  x:Name="TaskTypeDataGrid" HeightRequest="500" ItemsSource="{Binding TaskTypes,Mode=TwoWay}" >
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="1" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate >
+                <DataTemplate x:DataType="model:TaskType" x:Name="tsktypee">
+                    <Border StrokeShape="RoundRectangle 12" Stroke="{DynamicResource ButtonBackgroundColor}"   Padding="1"  Background="{DynamicResource TileBackgroundColor}" >
+                        <HorizontalStackLayout VerticalOptions="Start" Padding="10,0,0,0">
+                            <ImageButton Source="edit.png" Background="{DynamicResource TileBackgroundColor}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskTypeViewModel}}, Path=EditTaskTypeCommand}"
+CommandParameter="{Binding .}"
+WidthRequest="5"
+HeightRequest="5" Scale="0.5"
+HorizontalOptions="End" IsVisible="{Binding task_type, Converter={StaticResource TaskTypeToVisibilityConverter}}"
+ />
+                            <ImageButton Source="del.png" Background="{DynamicResource TileBackgroundColor}"
+                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskTypeViewModel}}, Path=DeleteTaskTypeCommand}"
+CommandParameter="{Binding .}"
+WidthRequest="5"
+HeightRequest="5" Scale="0.5"
+HorizontalOptions="End" 
+IsVisible="{Binding task_type, Converter={StaticResource TaskTypeToVisibilityConverter}}"
+                                                 
+                                                 />
+                            <VerticalStackLayout x:DataType="model:TaskType" HorizontalOptions="Center" VerticalOptions="Center" >
+                                <Label Text="{Binding task_type}"  FontSize="14" TextColor="{DynamicResource TileTextColor}" />
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer  
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskRecordViewModel}}, x:DataType=viewmodel:TaskRecordViewModel, Path=GoToDetailsCommand}"  
+                                CommandParameter="{Binding .}"/>
+                        </Border.GestureRecognizers>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Grid  Background="{DynamicResource TileAccentColor}" Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1"  ColumnDefinitions="*,Auto,Auto" ColumnSpacing="0" RowDefinitions="Auto,*"  RowSpacing="0" VerticalOptions="End" Padding="10" >
+            <Label FontAttributes="Bold" TextColor="{AppThemeBinding Light=#FFFFFF, Dark=#000000}" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Text="{Binding TaskTypeLabel, Mode=TwoWay}" HorizontalOptions="Start" VerticalOptions="End" Margin="5" />
+
+            <Border Grid.Row="1"  Grid.Column="0"  StrokeShape="RoundRectangle 10" Stroke="{DynamicResource ButtonBackgroundColor}" BackgroundColor="White" Padding="1">
+                <Entry Grid.Column="0"  Grid.Row="1"  Margin="0" x:Name="taskTextEntry" TextColor="{DynamicResource TileTextColor}" PlaceholderColor="{DynamicResource TileTextColor}" Background="White"
+ Text="{Binding TaskText, Mode=TwoWay}"  Placeholder="Enter Task Type" VerticalOptions="Center"  />
+            </Border>
+         
+            <Button x:Name="taskSubmitButton"
+        Text="Save"
+        Grid.Column="1"
+        Grid.Row="1"
+        FontSize="Subtitle"
+        TextColor="White"
+        Background="{DynamicResource ButtonBackgroundColor}"
+        Command="{Binding SaveTaskTypeCommand}"
+        VerticalOptions="End"
+        WidthRequest="{OnPlatform iOS=80, Android=80, WinUI=100}"
+        Margin="5">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                     Binding="{Binding TaskTypeLabel}"
+                     Value="Add Task Type :">
+                        <Setter Property="IsVisible" Value="True" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button"
+                     Binding="{Binding TaskTypeLabel}"
+                     Value="Edit Task Type :">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button"
+                     Binding="{Binding TaskTypeLabel}"
+                     Value="Delete Task Type :">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            
+            <Button x:Name="taskEditButton"
+        Text="Update"
+        Grid.Column="1"
+        Grid.Row="1"
+        FontSize="Subtitle"
+        TextColor="White"
+        Background="{DynamicResource ButtonBackgroundColor}"
+        Command="{Binding UpdateTaskTypeCommand}"
+        VerticalOptions="End"
+        WidthRequest="{OnPlatform iOS=80, Android=80, WinUI=100}"
+        Margin="5">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+                     Binding="{Binding TaskTypeLabel}"
+                     Value="Add Task Type :">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button"
+                     Binding="{Binding TaskTypeLabel}"
+                     Value="Edit Task Type :">
+                        <Setter Property="IsVisible" Value="True" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button"
+                     Binding="{Binding TaskTypeLabel}"
+                     Value="Delete Task Type :">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <Button x:Name="taskDeleteButton"
+Text="Delete"
+Grid.Column="1"
+Grid.Row="1"
+FontSize="Subtitle"
+TextColor="White"
+Background="{DynamicResource ButtonBackgroundColor}"
+Command="{Binding DelTaskTypeCommand}"
+VerticalOptions="End"
+WidthRequest="{OnPlatform iOS=80, Android=80, WinUI=100}"
+Margin="5">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button"
+             Binding="{Binding TaskTypeLabel}"
+             Value="Add Task Type :">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button"
+             Binding="{Binding TaskTypeLabel}"
+             Value="Edit Task Type :">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button"
+             Binding="{Binding TaskTypeLabel}"
+             Value="Delete Task Type :">
+                        <Setter Property="IsVisible" Value="True" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+            <ImageButton Grid.Column="2" Grid.Row="1"  Source="close.png" x:Name="taskAddButton" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=40}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=40}" Scale="0.85" Padding="10"  Command="{Binding CloseTaskTypeCommand}" Background="{DynamicResource ButtonBackgroundColor}" >
+                <ImageButton.Triggers>
+                    <DataTrigger TargetType="ImageButton"
+             Binding="{Binding TaskTypeLabel}"
+             Value="Add Task Type :">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="ImageButton"
+             Binding="{Binding TaskTypeLabel}"
+             Value="Edit Task Type :">
+                        <Setter Property="IsVisible" Value="True" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="ImageButton"
+             Binding="{Binding TaskTypeLabel}"
+             Value="Delete Task Type :">
+                        <Setter Property="IsVisible" Value="True" />
+                    </DataTrigger>
+                </ImageButton.Triggers>
+
+            </ImageButton>
+        </Grid>
+    </Grid>
+</ContentPage>

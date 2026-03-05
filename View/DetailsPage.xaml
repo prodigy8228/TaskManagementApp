@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage  
+    x:Class="TaskManagement.View.DetailsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:Tdt="clr-namespace:TaskManagement.View"  
+    xmlns:models="clr-namespace:TaskManagement.Model"
+    xmlns:viewmodel="clr-namespace:TaskManagement.ViewModel"
+    Title="Task Details"
+    x:DataType="viewmodel:TaskDetailsViewModel" >
+    <ContentPage.Resources>
+        <Tdt:IsEmptyToEnabledConverter x:Key="IsEmptyToEnabledConverter" />
+        <Tdt:NullableDateToDateConverter x:Key="NullableDateToDateConverter" />
+    </ContentPage.Resources>
+    <Frame x:Name="detailFrame"  Padding="10" MaximumHeightRequest="{OnPlatform iOS=900, Android=900, WinUI=900}" BorderColor="{OnPlatform iOS=Transparent, Android=Transparent, WinUI=#4E342E}" Background="{DynamicResource SettingFrameBgColor}" CornerRadius="10" HasShadow="True">
+        <Grid HorizontalOptions="Fill" VerticalOptions="{OnPlatform iOS=Start, Android=Start, WinUI=Fill}" >
+            <ScrollView>
+                <VerticalStackLayout Padding="20">
+                    <HorizontalStackLayout>
+                        <ImageButton 
+Command="{Binding ShareCommand}"
+WidthRequest="5"
+HeightRequest="5" Scale="0.5"
+Source="{AppThemeBinding Light='share.png', Dark='share_white.png'}" HorizontalOptions="End" IsVisible="{Binding IsAndroid}" />
+                        <ImageButton Source="{AppThemeBinding Light='del.png', Dark='del_white.png'}" Background="{DynamicResource SettingFrameBgColor}"
+Command="{Binding DeleteCommand}"
+WidthRequest="5"
+HeightRequest="5" Scale="0.5"
+ HorizontalOptions="End"  />
+                    </HorizontalStackLayout>
+                    <StackLayout Orientation="Horizontal" >
+                        <Border  StrokeShape="RoundRectangle 10" Stroke="{DynamicResource ButtonBackgroundColor}" Background="{DynamicResource ControlBackgroundColor}" Padding="1">
+                            <Entry WidthRequest="{OnPlatform iOS=200, Android=270, WinUI=375}"
+       FontAttributes="Bold"
+       Text="{Binding TaskTitle}"
+       IsEnabled="{Binding TaskRecord.task_title, Converter={StaticResource IsEmptyToEnabledConverter}}"
+       HorizontalOptions="Start"
+       Margin="0" TextColor="{AppThemeBinding Light=#000000, Dark=#000000}" PlaceholderColor="{DynamicResource TileTextColor}"  Background="{DynamicResource ControlBackgroundColor}" />
+                        </Border>
+                        <ImageButton Source="{AppThemeBinding Light='microphone.png', Dark='mice_white.png'}"
+Command="{Binding ListenTitleCommand}"
+WidthRequest="23"
+HeightRequest="23" Scale="0.5" HorizontalOptions="End" IsVisible="{Binding IsAndroid}" IsEnabled="{Binding TaskTitle, Converter={StaticResource IsEmptyToEnabledConverter}}" />
+                    </StackLayout>
+                    <StackLayout Orientation="Horizontal" Padding="0,3,0,3" >
+                        <Border  StrokeShape="RoundRectangle 10" Stroke="{DynamicResource ButtonBackgroundColor}" Background="{DynamicResource ControlBackgroundColor}" Padding="1">
+                            <Editor WidthRequest="{OnPlatform iOS=200, Android=270, WinUI=375}" Text="{Binding Description, Mode=TwoWay}" Placeholder="Enter description" HeightRequest="70" AutoSize="TextChanges" IsEnabled="{Binding isAdmin}" TextColor="{AppThemeBinding Light=#000000, Dark=#000000}" PlaceholderColor="{DynamicResource TileTextColor}"  Background="{DynamicResource ControlBackgroundColor}"  />
+                        </Border>
+                        <ImageButton Source="{AppThemeBinding Light='microphone.png', Dark='mice_white.png'}"
+                 Command="{Binding ListenDescriptionCommand}"
+                 WidthRequest="23"
+                 HeightRequest="23" Scale="0.5" HorizontalOptions="End" IsVisible="{Binding IsAndroid}" />
+                    </StackLayout>
+                    <StackLayout Orientation="Horizontal" Padding="0,3,0,6" >
+                        <Label FontAttributes="Bold" WidthRequest="80"  Text="Due Date :"  TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" VerticalTextAlignment="Center" IsEnabled="{Binding isAdmin}" />
+                        <Border  StrokeShape="RoundRectangle 10" Stroke="{DynamicResource ButtonBackgroundColor}" Background="{DynamicResource ControlBackgroundColor}" Padding="1">
+                            <DatePicker ToolTipProperties.Text="Due Date" Date="{Binding SelectedDate, Mode=TwoWay}" IsEnabled="{Binding isAdmin}" VerticalOptions="Start" />
+                        </Border>
+                    </StackLayout>
+                    <Border  StrokeShape="RoundRectangle 10" Stroke="{DynamicResource ButtonBackgroundColor}" Background="{DynamicResource ControlBackgroundColor}" Padding="1">
+                        <Picker ItemsSource="{Binding TaskTypes}" ItemDisplayBinding="{Binding DisplayText}"  SelectedItem="{Binding SelectedTaskType}" BackgroundColor="White" TextColor="{AppThemeBinding Light=#000000, Dark=#000000}" />
+                    </Border>
+                    
+                    <!-- Repeat Dropdown -->
+                    <Picker Title="Repeat"
+                ItemsSource="{Binding RepeatOptions}"
+                SelectedItem="{Binding TaskRecord.Repeat}" />
+
+
+                    <HorizontalStackLayout>
+                        <Button Style="{StaticResource CustomButtonStyle}"  Text="Attach Image File" Command="{Binding AttachFileCommand}" IsEnabled="{Binding isAdmin}" />
+                        <!-- File Name Display -->
+                        <Label WidthRequest="100" TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" Text="{Binding Filename_image}"  FontAttributes="Italic"  VerticalTextAlignment="Center" IsEnabled="{Binding isAdmin}" />
+                        <Button Text="View" Margin="5,5" Padding="5,3" IsVisible="{Binding ImageFileExist}" IsEnabled="{Binding isAdmin}" Background="{DynamicResource TileAccentColor}" >
+                            <Button.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnViewIconClicked"/>
+                            </Button.GestureRecognizers>
+                        </Button>
+                    </HorizontalStackLayout>
+                    <Label Text="Max Filesize allowed 2000KB" FontSize="11" TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" />
+                    <!-- Spacer -->
+                    <StackLayout x:Name="ImageContainer1"/>
+                    <HorizontalStackLayout Spacing="5" >
+                        <Button Style="{StaticResource CustomButtonStyle}"  Text="Attach Video File" Command="{Binding AttachVideoFileCommand}" IsEnabled="{Binding isAdmin}" />
+                        <!-- File Name Display -->
+                        <Label WidthRequest="100"  Text="{Binding Filename_video}" FontAttributes="Italic" TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" VerticalTextAlignment="Center" IsEnabled="{Binding isAdmin}" />
+                        <Button Margin="5,5" Padding="5,3"  Text="View" IsVisible="{Binding VideoFileExist}" IsEnabled="{Binding isAdmin}" Background="{DynamicResource TileAccentColor}" >
+                        <Button.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnViewVideoIconClicked"/>
+                        </Button.GestureRecognizers>
+                        </Button>
+                    </HorizontalStackLayout>
+                    <Label Text="Max Filesize allowed 2000KB" FontSize="11" TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" />
+                    <StackLayout x:Name="VideoContainer1"/>
+                    <StackLayout Orientation="Horizontal" Spacing="5">
+                        <Label FontAttributes="Bold"  WidthRequest="100"  Text="Completed?"  TextColor="{AppThemeBinding Light=#000000, Dark=#FFFFFF}" VerticalTextAlignment="Center" IsEnabled="{Binding isAdmin}" />
+                        <Switch IsToggled="{Binding IsCompleted, Mode=TwoWay}"/>
+                    </StackLayout>
+                    <Button Background="{DynamicResource ButtonBackgroundColor}" Text="Save Task" TextColor="{AppThemeBinding Light=#FFFFFF, Dark=#FFFFFF}" Command="{Binding SaveDetailsCommand}" FontAttributes="Bold"  FontSize="16" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+    </Frame>
+</ContentPage>

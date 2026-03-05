@@ -1,0 +1,103 @@
+﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TaskManagement"
+             x:Class="TaskManagement.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+                <!--<ResourceDictionary>
+                    <Color x:Key="TileBackgroundColor">#FFF8EB</Color>
+                    <Color x:Key="TileAccentColor">#FFD54F</Color>
+                    <Color x:Key="TileTextColor">#4E342E</Color>
+                    <Color x:Key="TileCompletedColor">#D3E3FC</Color>
+                    <Color x:Key="ButtonBackgroundColor">#D88C00</Color>
+                    <Color x:Key="ControlBackgroundColor">#FFF8EB</Color>
+                    <Color x:Key="ContentBackgroundColor">#f2f2f2</Color>
+                </ResourceDictionary>-->
+                <ResourceDictionary>
+                    <ControlTemplate x:Key="RadioButtonTemplate">
+                            <Grid>
+                                <Ellipse x:Name="OuterCircle"
+                 Stroke="{TemplateBinding BorderColor}"
+                 StrokeThickness="2"
+                 Fill="White"
+                 WidthRequest="20"
+                 HeightRequest="20" />
+                                <Ellipse x:Name="InnerDot"
+                 Fill="{TemplateBinding BorderColor}"
+                 WidthRequest="10"
+                 HeightRequest="10"
+                 Opacity="0"
+                 HorizontalOptions="Center"
+                 VerticalOptions="Center" />
+                                <ContentPresenter Margin="0,0,0,0" />
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CheckedStates">
+                                        <VisualState x:Name="Checked">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="InnerDot" Property="Opacity" Value="1" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Unchecked">
+                                            <VisualState.Setters>
+                                                <Setter TargetName="InnerDot" Property="Opacity" Value="0" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                            </Grid>
+
+
+
+                    </ControlTemplate>
+
+                    <Style TargetType="RadioButton" x:Key="RadioButtonStyle">
+                        <Setter Property="ControlTemplate" Value="{StaticResource RadioButtonTemplate}" />
+                        <Setter Property="BorderColor" Value="#261474" />
+                    </Style>
+                </ResourceDictionary>
+                
+                <ResourceDictionary>
+                    <SolidColorBrush x:Key="TileBackgroundColor">
+                        <SolidColorBrush.Color>
+                            <AppThemeBinding Light="#dad4e9" Dark="#dad4e9" />   
+                        </SolidColorBrush.Color>
+                    </SolidColorBrush>
+                    <SolidColorBrush x:Key="TileTextColor">
+                        <SolidColorBrush.Color>
+                            <AppThemeBinding Light="#4E342E" Dark="#ffffff" />
+                        </SolidColorBrush.Color>
+                    </SolidColorBrush>
+                    <SolidColorBrush x:Key="ButtonBackgroundColor">
+                        <SolidColorBrush.Color>
+                            <AppThemeBinding Light="#261474" Dark="#9880e5" />
+                        </SolidColorBrush.Color>
+                    </SolidColorBrush>
+                    <SolidColorBrush x:Key="SettingFrameBgColor">
+                        <SolidColorBrush.Color>
+                            <AppThemeBinding Light="#E1E1E1" Dark="#41308F" />
+                        </SolidColorBrush.Color>
+                    </SolidColorBrush>
+                    <SolidColorBrush x:Key="TileAccentColor">
+                        <SolidColorBrush.Color>
+                            <AppThemeBinding Light="#6c5ba8" Dark="#F6F4FD" />
+                        </SolidColorBrush.Color>
+                    </SolidColorBrush>
+                    <SolidColorBrush x:Key="LabelTextColor">
+                        <SolidColorBrush.Color>
+                            <AppThemeBinding Light="#000000" Dark="#FFFFFF" />
+                        </SolidColorBrush.Color>
+                    </SolidColorBrush>
+                    <Color x:Key="TileTextColor1">#261474</Color>
+                    <Color x:Key="TileCompletedColor">#D3E3FC</Color>
+                    <Color x:Key="ControlBackgroundColor">#ffffff</Color>
+                    <Color x:Key="ContentBackgroundColor">#dad4e9</Color>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

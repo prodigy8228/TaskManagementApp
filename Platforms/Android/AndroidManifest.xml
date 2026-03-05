@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.prodigy.sprinty" android:versionCode="1">
+	<application android:debuggable="true" android:usesCleartextTraffic="true" android:largeHeap="true" android:allowBackup="false" android:icon="@mipmap/ic_launcher" android:supportsRtl="true" android:enableOnBackInvokedCallback="true" android:label="Sprinty">
+		<receiver android:name=".TaskReminderReceiver" android:exported="true" />
+	</application>
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
+	<uses-permission android:name="android.permission.RECORD_AUDIO" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.CAMERA" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+	<meta-data android:name="com.android.gpu.usage" android:value="true" />
+</manifest>
