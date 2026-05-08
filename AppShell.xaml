@@ -60,8 +60,16 @@ Grid.Column="0" />
         </ShellContent>
 
     </FlyoutItem>
+
     <!-- Define Flyout Items -->
-        <FlyoutItem Title="Task Types"
+    <FlyoutItem Title="Draft Tasks"
+        FlyoutIcon="draft.png"
+        Route="DraftTaskPage">
+        <ShellContent ContentTemplate="{DataTemplate view:DraftTaskPage}" />
+    </FlyoutItem>
+
+
+    <FlyoutItem Title="Task Types"
                 FlyoutIcon="task.jpg"
                 Route="TaskTypePage">
             <ShellContent ContentTemplate="{DataTemplate view:TaskTypePage}" />
@@ -71,12 +79,6 @@ Grid.Column="0" />
                 FlyoutIcon="settings.jpg"
                 Route="SettingPage">
             <ShellContent ContentTemplate="{DataTemplate view:SettingPage}" />
-        </FlyoutItem>
-
-        <FlyoutItem Title="Backup / Restore"
-                FlyoutIcon="backup.jpg"
-                Route="BackupRestorePage">
-            <ShellContent ContentTemplate="{DataTemplate view:BackupRestorePage}" />
         </FlyoutItem>
 
 </Shell>

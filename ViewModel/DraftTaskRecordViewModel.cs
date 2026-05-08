@@ -10,9 +10,8 @@ using TaskManagement.Platforms;
 #endif
 namespace TaskManagement.ViewModel;
 
-public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
+public partial class DraftTaskRecordViewModel : ObservableObject, IQueryAttributable
 {
-
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         // This fires whenever you navigate TO this page, including "Back"
@@ -25,23 +24,22 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
                 LoadUsersCommand.Execute(null);
             }
             // Execute your load command
-            if (GetTaskRecordCommand.CanExecute(null))
+            if (GetDraftTaskRecordCommand.CanExecute(null))
             {
-                GetTaskRecordCommand.Execute(null);
+                GetDraftTaskRecordCommand.Execute(null);
             }
         }
     }
 #if ANDROID
     private readonly IBackgroundTaskService _backgroundTaskService;
 #endif
+    //  public Boolean isAdmin { get; set; } = false;
     public bool isAdmin => GlobalVariables.role == "Admin";
-    [ObservableProperty]
-    bool isSearchMode = false;
+    public bool isDraft => GlobalVariables.role == "Member";
     public ObservableCollection<Color> RowColors { get; set; }
-    public ObservableCollection<TaskRecord> TaskRecords { get; } = new();
+    public ObservableCollection<TaskRecord> DraftTaskRecords { get; } = new();
     public ObservableCollection<TaskRecord> allTasks { get; } = [];    // new();
     private Collection<TaskRecord> _originalData;
-    private TaskRecord _originalRecord;
     public bool IsAndroid => DeviceInfo.Platform == DevicePlatform.Android;
     public bool IsWindows => DeviceInfo.Platform == DevicePlatform.WinUI;
     [ObservableProperty]
@@ -53,6 +51,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
     private bool isBusy;
 
     private readonly IPopupService _popupService;
+
     public TaskRecord NewTask { get; set; } = new() { };
     [ObservableProperty]
     string taskText;
@@ -61,8 +60,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
     readonly CancellationTokenSource tokenSource;
 
     private readonly IFirestoreService _fService;
-
-    public TaskRecordViewModel(IPopupService popupService, IFirestoreService fService
+    public DraftTaskRecordViewModel(IPopupService popupService, IFirestoreService fService
 #if ANDROID
                        , IBackgroundTaskService backgroundTaskService
 #endif
@@ -72,11 +70,8 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
 #if ANDROID
         _backgroundTaskService = backgroundTaskService;
 #endif
-        SearchCommand = new Command<string>(async (query) => await SearchTaskRecordAsync(query));
         _fService = fService;
-
-
-        _ = GetTaskRecordAsync(); // Explicitly discard the returned Task to suppress CS4014
+        _ = GetDraftTaskRecordAsync(); // Explicitly discard the returned Task to suppress CS4014
 
         RowColors = new ObservableCollection<Color>
            {
@@ -91,117 +86,10 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
 #endif
         this.tokenSource = new CancellationTokenSource();
     }
-
-    private bool _isBulkEditing;
-    public bool IsBulkEditing
-    {
-        get => _isBulkEditing;
-        set { _isBulkEditing = value; OnPropertyChanged(); }
-    }
-
-    [RelayCommand]
-    async Task SaveAllAsync()
-    {
-        try
-        {
-            // 1. Get only the tasks that were in edit mode
-            var updatedTasks = TaskRecords.Where(t => t.IsEditing).ToList();
-
-            if (updatedTasks.Any())
-            {
-                // 2. Loop and Save (Update this part based on your Service/Database)
-                foreach (var task in updatedTasks)
-                {
-                    if (GlobalVariables.role == "Admin")
-                    {
-                        var saveResponse = await _fService.UpdateItemMainAsync(task);
-                    }
-                    else
-                    {
-                        var saveResponse = await _fService.UpdateItemDescAsync(task);
-                    }
-                }
-
-                // 3. Optional: Show a success alert
-                // await Shell.Current.DisplayAlert("Success", "All tasks updated!", "OK");
-            }
-
-            // 4. Reset UI state for all records
-            foreach (var task in TaskRecords)
-            {
-                task.IsEditing = false;
-            }
-
-            IsBulkEditing = false;
-        }
-        catch (Exception ex)
-        {
-            await Shell.Current.DisplayAlert("Error", $"Failed to save: {ex.Message}", "OK");
-        }
-    }
-
-    [RelayCommand]
-    public void CancelAll()
-    {
-        foreach (var task in TaskRecords)
-        {
-            task.IsEditing = false;
-        }
-        IsBulkEditing = false;
-        // Optional: Reload data from source to undo changes
-        _ = GetTaskRecordAsync();
-    }
-
-    [RelayCommand]
-    public void EnableBulkEdit()
-    {
-        // Capture today's date for comparison
-        var today = DateTime.Today;
-        IsBulkEditing = true;
-
-        foreach (var task in TaskRecords)
-        {
-            // DateTimeOffset.Date returns a DateTime representing the local date
-            if (task.task_due_date?.Date <= today)
-            {
-                task.IsEditing = true;
-            }
-            else
-            {
-                task.IsEditing = false;
-            }
-        }
-    }
-
-
-    [RelayCommand]
-    void OpenSearch() => IsSearchMode = true;
-
-    [RelayCommand]
-    void CloseSearch()
-    {
-        IsSearchMode = false;
-        SearchText = string.Empty; // Optional: clear search on close
-    }
-
-    [RelayCommand]
-    void Edit()
-    {
-        IsSearchMode = false;
-        SearchText = string.Empty; // Optional: clear search on close
-    }
-
-    [RelayCommand]
-    void Save()
-    {
-        IsSearchMode = false;
-        SearchText = string.Empty; // Optional: clear search on close
-    }
-
     public ICommand MultiCommand => new Command(async () =>
     {
         await ListenAsync();
-        await SaveTaskRecordAsync();
+        // await SaveTaskRecordAsync();
     });
 
 
@@ -259,7 +147,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
     private bool showCompleted;
 
     [RelayCommand]
-    async Task GetTaskRecordAsync()
+    async Task GetDraftTaskRecordAsync()
     {
         if (IsBusy)
             return;
@@ -271,32 +159,30 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
 
 
 
-            var TskRecords = await _fService.GetItemsAsync();
+            var TskRecords = await _fService.GetDraftItemsAsync();
 
             if (TskRecords!.Count != 0)
-                TaskRecords.Clear();
+                DraftTaskRecords.Clear();
 
             if (TskRecords != null)
             {
                 var today = DateTime.Today;
                 var sortedTasks = TskRecords.Where(t => t.task_type_id != 10).OrderByDescending(t => t.task_due_date?.Date == today)
-     .ThenBy(t => t.task_due_date?.Date)
-    // 3. Keep a chronological tie-breaker for items on the exact same day
-    .ThenBy(t => t.task_due_date)
+     .ThenBy(t => t.task_due_date)
        .ToList();
                 foreach (var task in sortedTasks)
                 {
                     Console.WriteLine(task.task_due_date + " ***** " + task.task_title);
-                    TaskRecords.Add(task);
+                    DraftTaskRecords.Add(task);
                 }
             }
-            if (TaskRecords != null && SelectedTaskType1 != null && SelectedTaskType1.task_type_id != 1)
+            if (DraftTaskRecords != null && SelectedTaskType1 != null && SelectedTaskType1.task_type_id != 1)
             {
                 IsBusy = false;
                 // Mark the setter as async and use Task.Run to call the async method
                 await FilterTaskRecordAsync(SelectedTaskType1.task_type_id);
             }
-            _originalData = TaskRecords;
+            _originalData = DraftTaskRecords;
 
         }
         catch (Exception ex)
@@ -361,14 +247,14 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
 
 
 
-            if (TaskRecords.Count != 0)
-                TaskRecords.Clear();
+            if (DraftTaskRecords.Count != 0)
+                DraftTaskRecords.Clear();
 
             if (taskRecords != null)
             {
                 foreach (var task in taskRecords)
                 {
-                    TaskRecords.Add(task);
+                    DraftTaskRecords.Add(task);
                 }
             }
         }
@@ -393,8 +279,8 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
             IsBusy = true;
             //var taskRecords = ShowCompleted ? await taskService.GetItemsTypeAsync(query) : await taskService.GetItemsTypeNotDoneAsync(query);
             var taskRecords = await _fService.GetItemsTypeAsync(query);
-            if (TaskRecords.Count != 0)
-                TaskRecords.Clear();
+            if (DraftTaskRecords.Count != 0)
+                DraftTaskRecords.Clear();
 
             if (taskRecords != null)
             {
@@ -403,7 +289,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
 .ThenBy(t => t.task_due_date).ToList();
                 foreach (var task in sortedTasks)
                 {
-                    TaskRecords.Add(task);
+                    DraftTaskRecords.Add(task);
                 }
             }
         }
@@ -427,7 +313,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
         {
             IsBusy = true;
             var taskRecords = await _fService.GetItemsAsync();
-            if (TaskRecords != null && SelectedTaskType1 != null)
+            if (DraftTaskRecords != null && SelectedTaskType1 != null)
             {
                 if (SelectedTaskType1.task_type_id != 1)
                 {
@@ -448,17 +334,17 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
                 }
             }
             await Task.Delay(100);
-            if (TaskRecords.Count != 0)
-                TaskRecords.Clear();
+            if (DraftTaskRecords.Count != 0)
+                DraftTaskRecords.Clear();
 
             if (taskRecords != null)
             {
                 foreach (var task in taskRecords)
                 {
-                    TaskRecords.Add(task);
+                    DraftTaskRecords.Add(task);
                 }
             }
-            OnPropertyChanged(nameof(taskRecords));
+            OnPropertyChanged(nameof(DraftTaskRecords));
         }
         catch (Exception ex)
         {
@@ -474,36 +360,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
     }
 
     [RelayCommand]
-    async Task ExtendTaskRecordAsync(TaskRecord query)
-    {
-        /*  if (GlobalVariables.role == "Member")
-          {
-              return;
-          }*/
-        if (IsBusy)
-            return;
-        try
-        {
-            IsBusy = true;
-            var delResponse = await _fService.UpdateDueDateToNextDayAsync(query);
-            //TaskRecords.Remove(query);
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Unable to get taskRecords: {ex.Message}");
-            await Shell.Current.DisplayAlert("Error!", ex.Message, "OK");
-        }
-        finally
-        {
-            IsBusy = false;
-            IsRefreshing = false;
-        }
-        await LoadUsersAsync();
-
-    }
-
-    [RelayCommand]
-    async Task DeleteTaskRecordAsync(TaskRecord query)
+    async Task AcceptedTaskRecordAsync(TaskRecord query)
     {
         if (GlobalVariables.role == "Member")
         {
@@ -514,13 +371,14 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
         try
         {
             IsBusy = true;
-            var delResponse = await _fService.DeleteItemAsync(query);
-            TaskRecords.Remove(query);
+            query.userId = GlobalVariables.userId;
+            var acceptResponse = await _fService.AcceptItemAsync(query);
+            DraftTaskRecords.Remove(query);
             //
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Unable to get taskRecords: {ex.Message}");
+            Debug.WriteLine($"Unable to get drafttaskRecords: {ex.Message}");
             await Shell.Current.DisplayAlert("Error!", ex.Message, "OK");
         }
         finally
@@ -528,9 +386,34 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
             IsBusy = false;
             IsRefreshing = false;
         }
-        await LoadUsersAsync();
+        // await LoadUsersAsync();
     }
 
+    [RelayCommand]
+    async Task DeleteTaskRecordAsync(TaskRecord query)
+    {
+        if (IsBusy)
+            return;
+        try
+        {
+            IsBusy = true;
+            var delResponse = await _fService.DeleteDraftItemAsync(query);
+            DraftTaskRecords.Remove(query);
+            //
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Unable to get draftTaskRecords: {ex.Message}");
+            await Shell.Current.DisplayAlert("Error!", ex.Message, "OK");
+        }
+        finally
+        {
+            IsBusy = false;
+            IsRefreshing = false;
+        }
+        // await LoadUsersAsync();
+
+    }
     public TaskType SelectedTaskType1 { get => _selectedTaskType; set => _selectedTaskType = value; }
     private TaskType _selectedTaskType;
     public TaskType SelectedTaskType
@@ -540,7 +423,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
         {
             SelectedTaskType1 = value;
             OnPropertyChanged();
-            if (TaskRecords != null && SelectedTaskType1 != null)
+            if (DraftTaskRecords != null && SelectedTaskType1 != null)
             {
                 _ = FilterTaskAsync();
             }
@@ -550,64 +433,12 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
     public ObservableCollection<TaskType> TaskTypes { get; set; } = new ObservableCollection<TaskType>();
 
     [RelayCommand]
-    async Task StartEditingAsync(TaskRecord task)
-    {
-        if (task != null)
-        {
-            task.IsEditing = true;
-            _originalRecord = new TaskRecord
-            {
-                task_title = task.task_title,
-                task_description = task.task_description,
-                task_due_date = task.task_due_date
-            };
-        }
-    }
-
-    [RelayCommand]
-    async Task StopEditingAsync(TaskRecord task)
-    {
-        if (_originalRecord != null)
-        {
-            // 1. Revert changes by copying original values back
-            task.task_title = _originalRecord.task_title;
-            task.task_description = _originalRecord.task_description;
-            task.task_due_date = _originalRecord.task_due_date;
-
-            // 2. Exit editing mode
-            task.IsEditing = false;
-
-            // 3. Clear the backup
-            _originalRecord = null;
-        }
-    }
-
-    [RelayCommand]
-    async Task SaveEditingAsync(TaskRecord task)
-    {
-        if (task != null)
-        {
-            task.IsEditing = false;
-            if (GlobalVariables.role == "Admin")
-            {
-                var saveResponse = await _fService.UpdateItemMainAsync(task);
-            }
-            else
-            {
-                var saveResponse = await _fService.UpdateItemDescAsync(task);
-            }
-
-            // 💡 Add your code here to save the changes to Firestore!
-            // UpdateFirestoreTask(task); 
-        }
-        await LoadUsersAsync();
-    }
-
-    [RelayCommand]
     async Task LoadUsersAsync()
     {
         if (TaskTypes.Count == 0)
         {
+            //   if (App.Firestore == null)
+            //      await ((App)Application.Current).InitFirestoreAsync();
             var taskTypes = await _fService.GetTaskTypesAsync(); // Fetch users from database/API
             TaskTypes.Clear();
             foreach (var tasktype in taskTypes)
@@ -638,7 +469,6 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
         }
         OnPropertyChanged(nameof(DisplayText));
     }
-
     [RelayCommand]
     async Task NavigateToTaskTypeAsync()
     {
@@ -669,7 +499,6 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
         NewTask.userId = GlobalVariables.userId;
         NewTask.assignee_id = GlobalVariables.userId;
         NewTask.CompanyId = GlobalVariables.companyid;
-        // NewTask.pending_description = "";
         await Shell.Current.GoToAsync(nameof(DetailsPage), true, new Dictionary<string, object>
         {
             {"TaskRecord",  NewTask }
@@ -694,98 +523,6 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
 
     [ObservableProperty]
     string? recognitionText;
-    [RelayCommand]
-    async Task SaveTaskRecordAsync()
-    {
-        if (IsBusy)
-            return;
-        try
-        {
-            int nextId = TaskRecords.Any() ? TaskRecords.Max(t => t.task_id) + 1 : 1;
-#if ANDROID
-            IsBusy = true;
-            NewTask.task_title = RecognitionText; // Use the recognized text as the task title
-            if (NewTask.task_title != "")
-            {
-
-                //  NewTask.task_due_date = DateTime.Now;
-                NewTask.task_id = nextId;
-                NewTask.task_type_id = 2; // Set the task type ID based on the selected task type
-                NewTask.task_description = "";
-                NewTask.IsCompleted = false; // Set default values for the new task
-                NewTask.Repeat = RepeatOption.NoRepeat;
-                NewTask.userId = GlobalVariables.userId;
-                NewTask.assignee_id = GlobalVariables.userId;
-                NewTask.CompanyId = GlobalVariables.companyid;
-                var response = await _fService.SaveItemAsync(NewTask);
-                if (response == 1)
-                {
-                    Console.WriteLine("Task inserted successfully!");
-                }
-                else
-                {
-                    Console.WriteLine("Failed to insert task.");
-                }
-
-                TaskRecords.Add(NewTask);
-                RecognitionText = "";
-            }
-#elif WINDOWS
-            Console.WriteLine("****** " + RecognitionText);
-            if (RecognitionText != "" && RecognitionText != null)
-            {
-                NewTask.task_title = RecognitionText;
-                /*  if (NewTask.task_due_date != default(DateTime))
-                {
-                    NewTask.task_due_date = DateTime.Now;
-                }*/
-                NewTask.task_id = nextId;
-                NewTask.task_description = "";
-                NewTask.task_type_id = 2; // Set the task type ID based on the selected task type
-                NewTask.Repeat = RepeatOption.NoRepeat;
-                NewTask.userId = GlobalVariables.userId;
-                NewTask.assignee_id = GlobalVariables.userId;
-                NewTask.CompanyId = GlobalVariables.companyid;
-                var response = await _fService.SaveItemAsync(NewTask);
-                if (response == 1)
-                {
-                    Console.WriteLine("Task inserted successfully!");
-                }
-                else
-                {
-                    Console.WriteLine("Failed to insert task.");
-                }
-
-
-                // TaskRecords.Add(NewTask);
-                TaskRecords.Add(NewTask);
-                RecognitionText = "";
-            }
-            else
-            {
-                Debug.WriteLine($"Unable to get TaskRecord");
-                await Shell.Current.DisplayAlert("Error", "Task Title is empty!", "OK");
-            }
-#endif
-            await LoadUsersAsync();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Unable to get TaskRecord: {ex.Message}");
-            await Shell.Current.DisplayAlert("Error!", "Task Title is empty", "OK");
-        }
-        finally
-        {
-            IsBusy = false;
-            IsRefreshing = false;
-        }
-        NewTask = new TaskRecord() { };
-        OnPropertyChanged(nameof(NewTask));
-#if ANDROID
-        // _backgroundTaskService.EnqueueOneTimeReminder("Task Reminder", "Finish compliance report today");
-#endif
-    }
-
 
     [RelayCommand]
     async Task UpdateTaskAsync(TaskRecord query)
@@ -797,7 +534,7 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
             IsBusy = true;
             Console.WriteLine("UpdateTaskAsync called with query: " + query.IsCompleted);
             // taskRecord.IsCompleted = !taskRecord.IsCompleted;
-            await App.Firestore.UpdateFinishItemAsync(query);
+            await _fService.UpdateFinishItemAsync(query);
         }
         catch (Exception ex)
         {
@@ -809,6 +546,6 @@ public partial class TaskRecordViewModel : ObservableObject, IQueryAttributable
             IsBusy = false;
             IsRefreshing = false;
         }
-        OnPropertyChanged(nameof(TaskRecords));
+        OnPropertyChanged(nameof(DraftTaskRecords));
     }
 }

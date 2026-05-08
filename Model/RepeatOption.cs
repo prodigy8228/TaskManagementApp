@@ -1,12 +1,11 @@
-﻿namespace TaskManagement.Model
+﻿namespace TaskManagement.Model;
+
+public enum RepeatOption
 {
-    public enum RepeatOption
-    {
-        NoRepeat = 0,
-        OnceADay = 1,
-        OnceAWeekMonFri = 2,
-        OnceAWeek = 3,
-        OnceAMonth = 4,
-        OnceAYear = 5
-    }
+    NoRepeat = 0,
+    OnceADay = 1,
+    OnceAWeekMonFri = 2,
+    OnceAWeek = 3,
+    OnceAMonth = 4,
+    OnceAYear = 5
 }

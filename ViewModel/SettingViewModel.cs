@@ -1,6 +1,4 @@
 ﻿#if ANDROID
-//using AndroidX.Media3.Common;
-// No other changes are needed as the error is caused by the missing namespace.
 using Android.Content;
 using Android.Provider;
 using Microsoft.Maui.Controls;
@@ -15,23 +13,24 @@ public partial class SettingViewModel : BaseViewModel
     public bool IsAndroid => DeviceInfo.Platform == DevicePlatform.Android;
     public bool IsWindows => DeviceInfo.Platform == DevicePlatform.WinUI;
 
-    MISDatabase taskService;
-    public SettingViewModel()
+    private readonly IFirestoreService _fService;
+    public SettingViewModel(IFirestoreService fService)
     {
-        this.TaskService = new MISDatabase();
+        _fService = fService;
         showQuickTask = GlobalVariables.IsQuckTaskVisible;
         showCompletedTask = GlobalVariables.IsCompletedTaskVisible;
+        SelectedReminderLanguage = Preferences.Get("ReminderLanguage", "English");
     }
-    public MISDatabase TaskService { get => taskService; set => taskService = value; }
     public ObservableCollection<TaskType> TaskTypes { get; set; } = new ObservableCollection<TaskType>();
 
     [RelayCommand]
     async Task LoadUsersAsync()
     {
-        var taskTypes = await taskService.GetTaskTypesAsync(); // Fetch users from database/API
+        var taskTypes = await _fService.GetTaskTypesAsync(); // Fetch tasktype from database/API
         TaskTypes.Clear();
         foreach (var tasktype in taskTypes)
         {
+            Console.WriteLine("task type id --> " + tasktype.task_type_id);
             TaskTypes.Add(tasktype); // Populate the dropdown dynamically
         }
         SelectedTaskType = taskTypes.FirstOrDefault(u => u.task_type_id == GlobalVariables.defTaskType);
@@ -48,8 +47,38 @@ public partial class SettingViewModel : BaseViewModel
             if (SelectedTaskType1 != null && GlobalVariables.defTaskType != SelectedTaskType1.task_type_id)
             {
                 GlobalVariables.defTaskType = SelectedTaskType1.task_type_id;
-                // var response = await taskService.SaveItemAsync(NewTask);
-                Task.Run(async () => taskService.SaveSettingItemAsync(GlobalVariables.defTaskType));
+                _ = UpdateSettingsAsync(); // fire and forget
+            }
+        }
+    }
+    private async Task UpdateSettingsAsync()
+    {
+        await _fService.SaveSettingItemAsync(GlobalVariables.defTaskType);
+    }
+
+    public ObservableCollection<string> ReminderLanguages { get; } =
+    new ObservableCollection<string> { "English", "Gujarati" };
+
+    private string _selectedReminderLanguage;
+    public string SelectedReminderLanguage
+    {
+        get => _selectedReminderLanguage;
+        set
+        {
+            if (_selectedReminderLanguage != value)
+            {
+                _selectedReminderLanguage = value;
+                Preferences.Set("ReminderLanguage", value);
+                OnPropertyChanged();
+                if (_selectedReminderLanguage != null && GlobalVariables.ReminderLanguage != _selectedReminderLanguage)
+                {
+                    string cultureCode = value == "Gujarati" ? "gu-IN" : "en-US";
+
+                    GlobalVariables.ReminderLanguage = cultureCode;
+                    //Task.Run(async () => taskService.SaveSettingLangAsync(GlobalVariables.ReminderLanguage));
+                    Task.Run(async () => _fService.SaveSettingLangAsync(GlobalVariables.ReminderLanguage));
+
+                }
             }
         }
     }
@@ -62,12 +91,18 @@ public partial class SettingViewModel : BaseViewModel
 
     partial void OnShowQuickTaskChanged(bool value)
     {
-        taskService.SaveSettingItemAsync(value);
+
+        _ = _fService.SaveSettingItemAsync(value);
+
     }
+
+
 
     partial void OnShowCompletedTaskChanged(bool value)
     {
-        taskService.SaveSettingOneItemAsync(value);
+
+        _ = _fService.SaveSettingOneItemAsync(value);
+
     }
 
 }

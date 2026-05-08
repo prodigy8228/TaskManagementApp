@@ -1,9 +1,8 @@
 ﻿namespace TaskManagement.ViewModel
 {
 
-    public partial class TaskTypeViewModel : BaseViewModel
+    public partial class TaskTypeViewModel : ObservableObject
     {
-        MISDatabase taskService;
         public ObservableCollection<TaskType> TaskTypes { get; } = new();
         [ObservableProperty]
         bool isRefreshing;
@@ -11,9 +10,12 @@
         string taskText;
         [ObservableProperty]
         string taskTypeLabel;
-        public TaskTypeViewModel()
+        [ObservableProperty]
+        bool isBusy;
+        private readonly IFirestoreService _fService;
+        public TaskTypeViewModel(IFirestoreService fService)
         {
-            this.taskService = new MISDatabase();
+            _fService = fService;
             GetTaskTypesAsync();
         }
 
@@ -25,7 +27,7 @@
             try
             {
                 IsBusy = true;
-                var taskTypes = await taskService.GetTaskTypesAsync(); // Fetch users from database/API
+                var taskTypes = await _fService.GetTaskTypesAsync(); // Fetch users from database/API
                 taskTypes = taskTypes.Where(o => o.sort_order == 1).ToList();
                 if (taskTypes != null)
                     TaskTypes.Clear();
@@ -65,8 +67,8 @@
                 {
 
                     NewTaskType.TaskCount = 0;
-
-                    var response = await taskService.SaveTaskTypeAsync(NewTaskType);
+                    NewTaskType.sort_order = 1;
+                    var response = await _fService.SaveTaskTypeAsync(NewTaskType);
                     if (response == 1)
                     {
                         Console.WriteLine("Task inserted successfully!");
@@ -83,9 +85,9 @@
                 if (TaskText != "")
                 {
                     NewTaskType.task_type = TaskText;
-
+                    NewTaskType.sort_order = 1;
                     NewTaskType.TaskCount = 0;
-                    var response = await taskService.SaveTaskTypeAsync(NewTaskType);
+                    var response = await _fService.SaveTaskTypeAsync(NewTaskType);
                     if (response == 1)
                     {
                         Console.WriteLine("Task Type inserted successfully!");
@@ -128,6 +130,7 @@
         [RelayCommand]
         async Task DeleteTaskTypeAsync(TaskType taskType)
         {
+            NewTaskType = taskType; // Fill the entry with selected task text
             TaskText = taskType.task_type; // Fill the entry with selected task text
             TaskTypeLabel = "Delete Task Type :";
 
@@ -146,7 +149,7 @@
                 if (NewTaskType.task_type != "")
                 {
 
-                    var response = await taskService.UpdateTaskTypeAsync(NewTaskType);
+                    var response = await _fService.UpdateTaskTypeAsync(NewTaskType);
                     if (response == 1)
                     {
                         Console.WriteLine("Task type updated successfully!");
@@ -162,7 +165,7 @@
                 if (TaskText != "")
                 {
                     NewTaskType.task_type = TaskText;
-                    var response = await taskService.UpdateTaskTypeAsync(NewTaskType);
+                    var response = await _fService.UpdateTaskTypeAsync(NewTaskType);
                     if (response == 1)
                     {
                         Console.WriteLine("Task Type updated successfully!");
@@ -218,9 +221,10 @@
 #if ANDROID
                 IsBusy = true;
                 NewTaskType.task_type = TaskText; // Use the recognized text as the task title
+                await Shell.Current.DisplayAlert("Log Trace dipti 123", $"Path: {NewTaskType.task_type_id}", "OK");
                 if (NewTaskType.task_type != "")
                 {
-                    var response = await taskService.DeleteTaskTypeAsync(NewTaskType);
+                    var response = await _fService.DeleteTaskTypeAsync(NewTaskType);
                     if (response == 1)
                     {
                         Console.WriteLine("Task type deleted successfully!");
@@ -236,7 +240,7 @@
                 if (TaskText != "")
                 {
                     NewTaskType.task_type = TaskText;
-                    var response = await taskService.DeleteTaskTypeAsync(NewTaskType);
+                    var response = await _fService.DeleteTaskTypeAsync(NewTaskType);
                     if (response == 1)
                     {
                         Console.WriteLine("Task Type deleted successfully!");
@@ -269,9 +273,3 @@
 
     }
 }
-
-
-
-
-
-

@@ -8,8 +8,8 @@
             Title="Task Management"  
             x:Class="TaskManagement.View.MainPage"  
             xmlns:model="clr-namespace:TaskManagement.Model"  
-            xmlns:viewmodel="clr-namespace:TaskManagement.ViewModel"  
-            x:DataType="{x:Type viewmodel:TaskRecordViewModel}">
+            xmlns:viewmodel="clr-namespace:TaskManagement.ViewModel"
+            x:DataType="viewmodel:TaskRecordViewModel" >
     <ContentPage.Resources>
         <ResourceDictionary>
             <Tdt:FileNameToImageConverter x:Key="FileNameToImageConverter" />
@@ -17,25 +17,69 @@
             <Tdt:IsNotEmptyToVisibleConverter x:Key="IsNotEmptyToVisibleConverter" />
             <Tdt:OverdueToColorConverter x:Key="OverdueToColorConverter" />
             <Tdt:NullableDateConverter x:Key="NullableDateConverter" />
+            <Tdt:IsDateExtendToAdminVisibleConverter x:Key="IsDateExtendToAdminVisibleConverter" />
+            <Tdt:IsEmptyToEnabledConverter x:Key="IsEmptyToEnabledConverter" />
+            <Tdt:AndBooleanConverter x:Key="AndConverter" />
+            <Tdt:DateTimeOffsetToDateTimeConverter x:Key="DateTimeOffsetToDateTimeConverter" />
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
-        <Tdt:AndBooleanConverter x:Key="AndConverter" />
+        
     </ContentPage.Resources>
-
-
     <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*" RowSpacing="0" >
-        <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="0" RowDefinitions="Auto,*,*"  RowSpacing="0" Padding="0,5,0,0"  Margin="5,0,0,0" >
-            <Border Grid.Column="0" Grid.Row="0" StrokeShape="RoundRectangle 12" Stroke="{DynamicResource ButtonBackgroundColor}"   Padding="1"  Background="{DynamicResource ControlBackgroundColor}" >
-                <Picker ItemsSource="{Binding TaskTypes}" ItemDisplayBinding="{Binding DisplayText}" SelectedItem="{Binding SelectedTaskType}" TextColor="{AppThemeBinding Light=#000000, Dark=#000000}" />
-            </Border>
-            <Border Grid.Column="1" Grid.Row="0" StrokeShape="RoundRectangle 12" Stroke="{DynamicResource ButtonBackgroundColor}"   Padding="1"  Background="{DynamicResource ControlBackgroundColor}" >
-                <SearchBar WidthRequest="{OnPlatform iOS=50, Android=150, WinUI=400}" Margin="5,0,0,0" Grid.Column="1" Grid.Row="0" x:Name="searchBar" Placeholder=""  SearchCommand="{Binding SearchCommand}" Text="{Binding SearchText, Mode=TwoWay}" TextChanged="OnSearchTextChanged"  SearchCommandParameter="{Binding Text, Source={x:Reference searchBar}}" />
-            </Border>
-            <ImageButton Grid.Column="2" Grid.Row="0"  Source="plus.png" x:Name="taskAddButton" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30"  Background="{DynamicResource ButtonBackgroundColor}" Command="{Binding GoToDetailsEmptyCommand}" />
+        <Grid Grid.Row="0" Grid.Column="0" ColumnDefinitions="*"  RowDefinitions="Auto"   ColumnSpacing="0" RowSpacing="0" Padding="0,5,0,0"  Margin="5,0,0,0" IsEnabled="{Binding isAdmin}" >
+            <Grid ColumnDefinitions="*, Auto, Auto, Auto" 
+          IsVisible="{Binding IsSearchMode, Converter={StaticResource InvertedBoolConverter}}"
+          Padding="5,0" ColumnSpacing="5">
+
+                <Border Grid.Column="0" StrokeShape="RoundRectangle 12" Stroke="{DynamicResource ButtonBackgroundColor}"   Padding="1"  Background="{DynamicResource ControlBackgroundColor}" IsEnabled="{Binding isAdmin}" >
+                    <Picker ItemsSource="{Binding TaskTypes}" ItemDisplayBinding="{Binding DisplayText}" SelectedItem="{Binding SelectedTaskType}" TextColor="{AppThemeBinding Light=#000000, Dark=#000000}" />
+                </Border>
+                <HorizontalStackLayout  Grid.Column="1" HorizontalOptions="End" Spacing="10" Margin="10">
+                    <!-- Show EDIT only when NOT in bulk mode -->
+                    <ImageButton  Source="edit.png" Command="{Binding EnableBulkEditCommand}" IsVisible="{Binding IsBulkEditing, Converter={StaticResource InvertedBoolConverter}}" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30" />
+                    <!-- Show SAVE and CANCEL only when IN bulk mode -->
+                    <ImageButton  Source="save.png" Command="{Binding SaveAllCommand}" IsVisible="{Binding IsBulkEditing}" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30" />
+                    <ImageButton  Source="close.png" Command="{Binding CancelAllCommand}" IsVisible="{Binding IsBulkEditing}" Background="{DynamicResource ButtonBackgroundColor}" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65"  />
+                </HorizontalStackLayout>
+
+               <!--<ImageButton Grid.Column="1" Source="save.png" Command="{Binding SaveCommand}" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30" />
+                <ImageButton Grid.Column="2" Source="edit.png" Command="{Binding EditCommand}" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30" />-->
+                <ImageButton Grid.Column="2" Source="plus.png" Command="{Binding GoToDetailsEmptyCommand}" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30" Background="{DynamicResource ButtonBackgroundColor}" />
+
+                <!-- CLICK THIS TO OPEN SEARCH -->
+                <ImageButton Grid.Column="3" Source="search.png" Command="{Binding OpenSearchCommand}" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30" Clicked="OnOpenSearchClicked" />
+            </Grid>
+
+            <!-- ROW 2: FULL WIDTH SEARCH BAR (Initially Hidden) -->
+            <Grid ColumnDefinitions="*, Auto" 
+          IsVisible="{Binding IsSearchMode}" 
+          Padding="5,0" HeightRequest="45" 
+          VerticalOptions="Start">
+
+                <Border Grid.Column="0" HeightRequest="40" VerticalOptions="Center" StrokeShape="RoundRectangle 12" Stroke="{DynamicResource ButtonBackgroundColor}"   Padding="1"  Background="{DynamicResource ControlBackgroundColor}" IsEnabled="{Binding isAdmin}">
+                    <SearchBar Margin="5,0,0,0" x:Name="searchBar" 
+                       Placeholder="Search..." 
+                       Text="{Binding SearchText, Mode=TwoWay}" 
+                       SearchCommand="{Binding SearchCommand}" TextChanged="OnSearchTextChanged" />
+                </Border>
+
+                <!-- CLICK THIS TO CLOSE SEARCH AND SHOW ADD BUTTON AGAIN -->
+                <ImageButton Grid.Column="1" Source="close.png" 
+                     Command="{Binding CloseSearchCommand}" 
+                     WidthRequest="30" VerticalOptions="Center" Margin="5,0"/>
+            </Grid>
         </Grid>
 
         <VerticalStackLayout  Grid.Row="1" Grid.Column="0"  x:Name="TaskContainer">
+           <CollectionView  Margin="8,8,8,8"   ItemsSource="{Binding TaskRecords,Mode=TwoWay}" x:Name="TaskDataGrid"  SelectionMode="Single"  SelectionChanged="OnItemTapped"  >
+                <CollectionView.ItemSizingStrategy>MeasureAllItems</CollectionView.ItemSizingStrategy>
+                <CollectionView.EmptyView>
+                    <StackLayout HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label Text="No tasks found." FontAttributes="Bold" />
+                        <Label Text="Try adding a new task to get started!" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
 
-            <CollectionView  Margin="8,8,8,8"   HeightRequest="500" ItemsSource="{Binding TaskRecords,Mode=TwoWay}" x:Name="TaskDataGrid"  SelectionMode="Single"  SelectionChanged="OnItemTapped"  >
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" ItemSpacing="1" />
                 </CollectionView.ItemsLayout>
@@ -45,7 +89,7 @@
                     <DataTemplate x:DataType="model:TaskRecord" x:Name="tsk">
                         <Border StrokeShape="RoundRectangle 12"
         Stroke="{DynamicResource ButtonBackgroundColor}"
-        Padding="1"
+        Padding="5"
         Background="{DynamicResource TileBackgroundColor}">
                             <Border.Triggers>
                                 <DataTrigger TargetType="Border"
@@ -53,35 +97,140 @@
                      Value="True">
                                     <Setter Property="Background" Value="LightPink"/>
                                 </DataTrigger>
+                                <DataTrigger TargetType="Border"
+Binding="{Binding pending_description, Converter={StaticResource IsNotEmptyToVisibleConverter}}"
+Value="True">
+                                    <Setter Property="Background" Value="LightCoral"/>
+                                </DataTrigger>
                             </Border.Triggers>
 
 
-                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Start" >
-                                <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, Mode=TwoWay}" VerticalOptions="Start" IsEnabled="False" />
-                                <VerticalStackLayout Grid.Column="1">
-                                    <Label LineBreakMode="WordWrap" MaxLines="-1" Text="{Binding task_title}" FontAttributes="Bold" FontSize="16" TextColor="{DynamicResource TileTextColor}" />
-                                    <Label Text="{Binding task_description}"  FontSize="14" TextColor="{DynamicResource TileTextColor}" IsVisible="{Binding task_description, Converter={StaticResource IsNotEmptyToVisibleConverter}}"  />
-                                    <!--<Label Text="{Binding task_due_date, StringFormat='Due: {dd:MM:yyyy}'}" FontSize="12" TextColor="{DynamicResource TileTextColor}" VerticalOptions="Center" VerticalTextAlignment="Center"  />-->
-                                    <Label Text="{Binding task_due_date, Converter={StaticResource NullableDateConverter}}"
-       FontSize="12"
-       TextColor="{DynamicResource TileTextColor}"
-       VerticalOptions="Center"
-       VerticalTextAlignment="Center" />
-                                </VerticalStackLayout>
-                                <ImageButton Grid.Column="2" Source="del.png" Background="{DynamicResource TileBackgroundColor}"
- Command="{Binding Source={x:Reference TaskPage}, Path=BindingContext.DeleteTaskRecordCommand}"
+                            <Grid ColumnDefinitions="40,*,40,40,40" VerticalOptions="Start" >
+                               <!-- <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, Mode=TwoWay}" VerticalOptions="Start" IsEnabled="False" />-->
+                                <StackLayout Spacing="2" Orientation="Horizontal" Grid.Column="0" >
+                                    <ImageButton  Source="save.png" 
+ Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskRecordViewModel}}, Path=SaveEditingCommand, x:DataType=viewmodel:TaskRecordViewModel}"
                                 CommandParameter="{Binding .}"
                                 WidthRequest="5"
                                 HeightRequest="5" Scale="0.5"
-                                HorizontalOptions="End" >
+                                HorizontalOptions="End" IsVisible="{Binding IsEditing}"  >
+                                    </ImageButton>
+                                </StackLayout>
+                                <VerticalStackLayout Grid.Column="1">
+                                <VerticalStackLayout Spacing="2">
+                                    
+                                    <VerticalStackLayout.IsVisible>True</VerticalStackLayout.IsVisible>
+                                    <VerticalStackLayout.Triggers>
+                                        <!-- Hide instantly if IsEditing becomes true -->
+                                        <DataTrigger TargetType="VerticalStackLayout" Binding="{Binding IsEditing}" Value="True">
+                                            <Setter Property="IsVisible" Value="False" />
+                                        </DataTrigger>
+                                    </VerticalStackLayout.Triggers>
+                                    <Label LineBreakMode="WordWrap" MaxLines="-1" Text="{Binding task_title}" FontAttributes="Bold" FontSize="16" TextColor="{DynamicResource TileTextColor}" />
+                                        <Label Text="{Binding task_description}"  FontSize="14" TextColor="{DynamicResource TileTextColor}" IsVisible="{Binding task_description, Converter={StaticResource IsNotEmptyToVisibleConverter}}"  />
+                                        <Label Text="{Binding task_due_date, Converter={StaticResource NullableDateConverter}}"
+FontSize="12"
+TextColor="{DynamicResource TileTextColor}"
+VerticalOptions="Center"
+VerticalTextAlignment="Center" />
+                                        <Label Text="{Binding DisplayUsername}" FontSize="12" TextColor="{DynamicResource TileTextColor}" VerticalOptions="Center" VerticalTextAlignment="Center" IsVisible="{Binding DisplayUsername, Converter={StaticResource IsNotEmptyToVisibleConverter}}" />
+                                    </VerticalStackLayout>
+
+                                    <!-- EDIT MODE CONTROLS -->
+                                    <VerticalStackLayout Spacing="5" IsVisible="{Binding IsEditing}">
+                                        <Entry HorizontalOptions="Fill"
+FontAttributes="Bold"
+Text="{Binding task_title}"
+IsEnabled="{Binding task_title, Converter={StaticResource IsEmptyToEnabledConverter}}"
+
+Margin="0" TextColor="{AppThemeBinding Light=#000000, Dark=#000000}" PlaceholderColor="{DynamicResource TileTextColor}"  Background="{DynamicResource ControlBackgroundColor}" />
+
+                                        <Editor  Text="{Binding task_description, Mode=TwoWay}" Placeholder="Enter description" HeightRequest="70" AutoSize="TextChanges" TextColor="{AppThemeBinding Light=#000000, Dark=#000000}" PlaceholderColor="{DynamicResource TileTextColor}"  Background="{DynamicResource ControlBackgroundColor}" HorizontalOptions="Fill" />
+                                        <Border StrokeShape="RoundRectangle 5" Stroke="#CCCCCC" Padding="2">
+                                            <DatePicker ToolTipProperties.Text="Due Date" Date="{Binding task_due_date, Mode=TwoWay, Converter={StaticResource DateTimeOffsetToDateTimeConverter}}"  VerticalOptions="Start" />
+                                        </Border>
+                                        <Label Text="{Binding DisplayUsername}" FontSize="12" TextColor="{DynamicResource TileTextColor}" VerticalOptions="Center" VerticalTextAlignment="Center" IsVisible="{Binding DisplayUsername, Converter={StaticResource IsNotEmptyToVisibleConverter}}" />
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+                                <ImageButton Grid.Column="2" 
+          Source="calendar_page.png" 
+          Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskRecordViewModel}}, Path=ExtendTaskRecordCommand, x:DataType=viewmodel:TaskRecordViewModel}"
+          CommandParameter="{Binding .}"
+          WidthRequest="5"
+          HeightRequest="5" Scale="0.5"
+          
+          HorizontalOptions="End"
+          IsVisible="{Binding task_due_date, Converter={StaticResource OverdueToColorConverter}}">
+
+                                    <ImageButton.Triggers>
+                                        <!-- Use the same working visibility converter to decide the color instead of a secondary crashing one -->
+                                        <DataTrigger TargetType="ImageButton"
+                  Binding="{Binding task_due_date, Converter={StaticResource OverdueToColorConverter}}"
+                  Value="True">
+                                            <Setter Property="Background" Value="LightPink"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="ImageButton"
+Binding="{Binding pending_description, Converter={StaticResource IsNotEmptyToVisibleConverter}}"
+Value="True">
+                                            <Setter Property="Background" Value="LightCoral"/>
+                                        </DataTrigger>
+                                    </ImageButton.Triggers>
+                                </ImageButton>
+                                <Grid Grid.Column="3" HorizontalOptions="Start" VerticalOptions="Center">
+                                    <!-- Show EDIT only when NOT in bulk mode -->
+                                    <ImageButton  Source="edit.png" 
+ Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskRecordViewModel}}, Path=StartEditingCommand, x:DataType=viewmodel:TaskRecordViewModel}"
+                                CommandParameter="{Binding .}"
+                                WidthRequest="5"
+                                HeightRequest="5" Scale="0.5"
+                                HorizontalOptions="Center"  >
+                                        <ImageButton.IsVisible>True</ImageButton.IsVisible>
+                                        <ImageButton.Triggers>
+                                            <DataTrigger TargetType="ImageButton" Binding="{Binding IsEditing}" Value="True">
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="ImageButton"
+Binding="{Binding task_due_date, Converter={StaticResource OverdueToColorConverter}}"
+Value="True">
+                                                <Setter Property="Background" Value="LightPink"/>
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="ImageButton"
+Binding="{Binding pending_description, Converter={StaticResource IsNotEmptyToVisibleConverter}}"
+Value="True">
+                                                <Setter Property="Background" Value="LightCoral"/>
+                                            </DataTrigger>
+                                        </ImageButton.Triggers>
+                                    </ImageButton>
+                                    <!-- Show SAVE and CANCEL only when IN bulk mode -->
+                                    <ImageButton  Source="close.png" 
+Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskRecordViewModel}}, Path=StopEditingCommand, x:DataType=viewmodel:TaskRecordViewModel}"
+                               CommandParameter="{Binding .}"
+                               WidthRequest="5"
+                               HeightRequest="5" Scale="0.5"
+                               HorizontalOptions="Center" IsVisible="{Binding IsEditing}"  >
+                                    </ImageButton>
+                                </Grid>
+                                
+                                <ImageButton Grid.Column="4" Source="del.png" 
+ Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskRecordViewModel}}, Path=DeleteTaskRecordCommand, x:DataType=viewmodel:TaskRecordViewModel}"
+                                CommandParameter="{Binding .}"
+                                WidthRequest="5"
+                                HeightRequest="5" Scale="0.5"
+                                HorizontalOptions="End" IsEnabled="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskRecordViewModel}}, Path=isAdmin}"  >
                                     <ImageButton.Triggers>
                                         <DataTrigger TargetType="ImageButton"
 Binding="{Binding task_due_date, Converter={StaticResource OverdueToColorConverter}}"
 Value="True">
-                                        <Setter Property="Background" Value="LightPink"/>
-                                    </DataTrigger>
-                                </ImageButton.Triggers>
+                                            <Setter Property="Background" Value="LightPink"/>
+                                        </DataTrigger>
+                                        <DataTrigger TargetType="ImageButton"
+Binding="{Binding pending_description, Converter={StaticResource IsNotEmptyToVisibleConverter}}"
+Value="True">
+                                            <Setter Property="Background" Value="LightCoral"/>
+                                        </DataTrigger>
+                                    </ImageButton.Triggers>
                                 </ImageButton>
+   
                             </Grid>
                         </Border>
                         <!--</SwipeView>-->
@@ -90,7 +239,7 @@ Value="True">
             </CollectionView>
         </VerticalStackLayout>
         <!--</RefreshView>-->
-        <Grid Background="{DynamicResource TileAccentColor}" Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="0" RowDefinitions="*"  RowSpacing="0" VerticalOptions="End" Margin="0,0,0,0" Padding="5" >
+        <Grid Background="{DynamicResource TileAccentColor}" Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="0" RowDefinitions="*"  RowSpacing="0" VerticalOptions="End" Margin="0,0,0,0" Padding="5" IsEnabled="{Binding isAdmin}" >
             <Border Grid.ColumnSpan="3"  Grid.Row="0"  Grid.Column="0"  StrokeShape="RoundRectangle 10" Stroke="{DynamicResource ButtonBackgroundColor}" BackgroundColor="White" Padding="1">
                 <Entry Margin="0" x:Name="taskTextEntry" TextColor="{DynamicResource TileTextColor}" PlaceholderColor="{DynamicResource TileTextColor}" BackgroundColor="White"
   FontSize="14"  Text="{Binding RecognitionText, Mode=TwoWay}"  Placeholder="{OnPlatform iOS='Tap on Speak button before speaking', Android='Tap on Speak button before speaking', WinUI='Enter Quick Task Here'}" VerticalOptions="End" IsVisible="{Binding IsQuickTask}" />
@@ -119,5 +268,6 @@ Value="True">
 
     <!--</ScrollView>-->
 </ContentPage>
+    
 <!-- In your MainPage.xaml -->
 <!-- Flyout Menu -->

@@ -6,8 +6,7 @@
              xmlns:model="clr-namespace:TaskManagement.Model"
              x:Class="TaskManagement.View.TaskTypePage"
              xmlns:viewmodel="clr-namespace:TaskManagement.ViewModel" 
-             Title="Task Type List"
-             x:DataType="{x:Type viewmodel:TaskTypeViewModel}">
+             Title="Task Type List">
     <ContentPage.Resources>
         <local:TaskTypeToVisibilityConverter x:Key="TaskTypeToVisibilityConverter" />
     </ContentPage.Resources>
@@ -24,14 +23,15 @@
                     <Border StrokeShape="RoundRectangle 12" Stroke="{DynamicResource ButtonBackgroundColor}"   Padding="1"  Background="{DynamicResource TileBackgroundColor}" >
                         <HorizontalStackLayout VerticalOptions="Start" Padding="10,0,0,0">
                             <ImageButton Source="edit.png" Background="{DynamicResource TileBackgroundColor}"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskTypeViewModel}}, Path=EditTaskTypeCommand}"
-CommandParameter="{Binding .}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskTypeViewModel}}, Path=EditTaskTypeCommand, x:DataType=viewmodel:TaskTypeViewModel}"
+                                   
+ CommandParameter="{Binding .}"
 WidthRequest="5"
 HeightRequest="5" Scale="0.5"
 HorizontalOptions="End" IsVisible="{Binding task_type, Converter={StaticResource TaskTypeToVisibilityConverter}}"
  />
                             <ImageButton Source="del.png" Background="{DynamicResource TileBackgroundColor}"
-                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskTypeViewModel}}, Path=DeleteTaskTypeCommand}"
+                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:TaskTypeViewModel}}, Path=DeleteTaskTypeCommand, x:DataType=viewmodel:TaskTypeViewModel}"
 CommandParameter="{Binding .}"
 WidthRequest="5"
 HeightRequest="5" Scale="0.5"
@@ -59,7 +59,7 @@ IsVisible="{Binding task_type, Converter={StaticResource TaskTypeToVisibilityCon
                 <Entry Grid.Column="0"  Grid.Row="1"  Margin="0" x:Name="taskTextEntry" TextColor="{DynamicResource TileTextColor}" PlaceholderColor="{DynamicResource TileTextColor}" Background="White"
  Text="{Binding TaskText, Mode=TwoWay}"  Placeholder="Enter Task Type" VerticalOptions="Center"  />
             </Border>
-         
+
             <Button x:Name="taskSubmitButton"
         Text="Save"
         Grid.Column="1"
@@ -89,7 +89,7 @@ IsVisible="{Binding task_type, Converter={StaticResource TaskTypeToVisibilityCon
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
-            
+
             <Button x:Name="taskEditButton"
         Text="Update"
         Grid.Column="1"

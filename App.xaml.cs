@@ -1,29 +1,42 @@
-﻿namespace TaskManagement
+﻿using TaskManagement.View;
+namespace TaskManagement
 {
     public partial class App : Application
     {
-        public App()
+        public static FirestoreService Firestore { get; private set; }
+
+        public App(IServiceProvider serviceProvider)
         {
             InitializeComponent();
             Application.Current.UserAppTheme = AppTheme.Light;
 
-            MainPage = new AppShell();
+            MainPage = serviceProvider.GetService<SignInPage>();
+
 
         }
-
-        private async Task MigrateDatabaseAsync(int oldVersion, int newVersion)
+        public static async Task InitializeSession(string idToken)
         {
-            MISDatabase taskService = new MISDatabase();
-            if (oldVersion == 1 && newVersion == 2)
-            {
-                await taskService.ExecuteAsync("ALTER TABLE Settings ADD COLUMN AppVersion DOUBLE DEFAULT 1.0;");
-            }
+            // 1. Initialize the global Firestore service
+            Firestore = new FirestoreService();
+            await Firestore.LoadSettingsToGlobalsAsync();
+
+            // 2. Switch the root page to AppShell to allow main app access
+            Current.MainPage = new AppShell();
         }
 
         protected override async void OnStart()
         {
-            //  await Database.LoadSettingsToGlobalsAsync();
-            // Now GlobalVariables.Theme and Language are ready to use
+            try
+            {
+                //  await InitFirestoreAsync();
+                // MainPage = new AppShell();
+            }
+            catch (Exception ex)
+            {
+                // Log or handle initialization error
+            }
         }
+
+
     }
 }

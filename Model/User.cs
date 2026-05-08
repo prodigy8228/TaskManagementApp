@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using Plugin.Firebase.Firestore;
 
-namespace TaskManagement.Model
+namespace TaskManagement.Model;
+
+public class User
 {
-    public class User
-    {
-        public int? user_id { get; set; }
-        public string? user_name { get; set; }
-        public string? user_email { get; set; }
-        public string? user_password { get; set; }
-        public string? created_at { get; set; }
-    }
-    [JsonSerializable(typeof(List<User>))]
-    internal sealed partial class UserContext : JsonSerializerContext
-    {
+    [FirestoreDocumentId]
+    public string Id { get; set; }
 
-    }
+    [FirestoreProperty("Username")]
+    public string Username { get; set; }
+    [FirestoreProperty("Email")]
+    public string Email { get; set; }
+    [FirestoreProperty("Role")]
+    public string Role { get; set; }      // "Admin" or "Member"
+    [FirestoreProperty("CompanyId")]
+    public string CompanyId { get; set; } // Reference to Company
 }

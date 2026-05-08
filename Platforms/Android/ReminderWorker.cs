@@ -14,10 +14,9 @@ namespace TaskManagement.Platforms
 
         public override Result DoWork()
         {
-            MISDatabase taskService = new MISDatabase();
             // Example: fetch tasks from a repository
             var pendingTasks = Task.Run(async () =>
-               await taskService.GetItemsTypeNotDoneDateAsync()
+               await App.Firestore.GetItemsTypeNotDoneDateAsync()
            ).Result;
 
             if (pendingTasks.Any())
@@ -26,7 +25,6 @@ namespace TaskManagement.Platforms
                 var message = $"You have {pendingTasks.Count} pending task(s) for today.";
                 ShowNotification(title, message);
             }
-
             return Result.InvokeSuccess();
         }
 

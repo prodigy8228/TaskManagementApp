@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"  
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"  
+            x:Name="TaskPage1"
+            xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+            xmlns:Tdt="clr-namespace:TaskManagement.View"  
+            Title="Draft Tasks"  
+            x:Class="TaskManagement.View.DraftTaskPage"  
+            xmlns:model="clr-namespace:TaskManagement.Model"  
+            xmlns:viewmodel="clr-namespace:TaskManagement.ViewModel"
+            x:DataType="viewmodel:DraftTaskRecordViewModel" >
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Tdt:FileNameToImageConverter x:Key="FileNameToImageConverter" />
+            <Tdt:FileNameToImageConverterVideo x:Key="FileNameToImageConverter_video" />
+            <Tdt:IsNotEmptyToVisibleConverter x:Key="IsNotEmptyToVisibleConverter" />
+            <Tdt:OverdueToColorConverter x:Key="OverdueToColorConverter" />
+            <Tdt:NullableDateConverter x:Key="NullableDateConverter" />
+        </ResourceDictionary>
+        <Tdt:AndBooleanConverter x:Key="AndConverter" />
+    </ContentPage.Resources>
+
+
+    <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*" RowSpacing="0" >
+        <HorizontalStackLayout  Grid.Row="0" Grid.Column="0" >
+            <Label Text="Create Draft Task" FontSize="Default" FontAttributes="Bold" TextColor="{DynamicResource TileTextColor}" Margin="8,8,8,0" IsVisible="{Binding isDraft}" />
+            <ImageButton  Source="plus.png" x:Name="draftTaskAddButton" WidthRequest="{OnPlatform iOS=15, Android=15, WinUI=20}"  HeightRequest="{OnPlatform iOS=15, Android=15, WinUI=20}" Scale="0.65" CornerRadius="30"  Background="{DynamicResource ButtonBackgroundColor}" Command="{Binding GoToDetailsEmptyCommand}" IsVisible="{Binding isDraft}" />
+        </HorizontalStackLayout>
+
+        <VerticalStackLayout  Grid.Row="1" Grid.Column="0"  x:Name="TaskContainer">
+
+            <CollectionView  Margin="8,8,8,8"   HeightRequest="500" ItemsSource="{Binding DraftTaskRecords,Mode=TwoWay}" x:Name="TaskDataGrid"  SelectionMode="Single"  SelectionChanged="OnItemTapped"  >
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="1" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate >
+
+
+                    <DataTemplate x:DataType="model:TaskRecord" x:Name="tsk">
+                        <Border StrokeShape="RoundRectangle 12"
+        Stroke="{DynamicResource ButtonBackgroundColor}"
+        Padding="1"
+        Background="{DynamicResource TileBackgroundColor}">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border"
+                     Binding="{Binding task_due_date, Converter={StaticResource OverdueToColorConverter}}"
+                     Value="True">
+                                    <Setter Property="Background" Value="LightPink"/>
+                                </DataTrigger>
+                            </Border.Triggers>
+
+
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto" VerticalOptions="Start" >
+                                <CheckBox Grid.Column="0" IsChecked="{Binding IsCompleted, Mode=TwoWay}" VerticalOptions="Start" IsEnabled="False" />
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label LineBreakMode="WordWrap" MaxLines="-1" Text="{Binding task_title}" FontAttributes="Bold" FontSize="16" TextColor="{DynamicResource TileTextColor}" />
+                                    <Label Text="{Binding task_description}"  FontSize="14" TextColor="{DynamicResource TileTextColor}" IsVisible="{Binding task_description, Converter={StaticResource IsNotEmptyToVisibleConverter}}"  />
+
+                                    <Label Text="{Binding task_due_date, Converter={StaticResource NullableDateConverter}}"
+       FontSize="12"
+       TextColor="{DynamicResource TileTextColor}"
+       VerticalOptions="Center"
+       VerticalTextAlignment="Center" />
+                                    <Label Text="{Binding DisplayUsername}" FontSize="12" TextColor="{DynamicResource TileTextColor}" VerticalOptions="Center" VerticalTextAlignment="Center" IsVisible="{Binding DisplayUsername, Converter={StaticResource IsNotEmptyToVisibleConverter}}" />
+                                </VerticalStackLayout>
+                                <ImageButton Grid.Column="2" Source="accepted.png" 
+ Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:DraftTaskRecordViewModel}}, Path=AcceptedTaskRecordCommand, x:DataType=viewmodel:DraftTaskRecordViewModel}"
+                                CommandParameter="{Binding .}"
+                                WidthRequest="5"
+                                HeightRequest="5" Scale="0.5"
+                                HorizontalOptions="End"   >
+
+                                </ImageButton>                                
+                                <ImageButton Grid.Column="3" Source="del.png" 
+ Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:DraftTaskRecordViewModel}}, Path=DeleteTaskRecordCommand, x:DataType=viewmodel:DraftTaskRecordViewModel}"
+                                CommandParameter="{Binding .}"
+                                WidthRequest="5"
+                                HeightRequest="5" Scale="0.5"
+                                HorizontalOptions="End" >
+                                    <ImageButton.Triggers>
+                                        <DataTrigger TargetType="ImageButton"
+Binding="{Binding task_due_date, Converter={StaticResource OverdueToColorConverter}}"
+Value="True">
+                                            <Setter Property="Background" Value="LightPink"/>
+                                        </DataTrigger>
+                                    </ImageButton.Triggers>
+                                </ImageButton>
+                            </Grid>
+                        </Border>
+                        <!--</SwipeView>-->
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </Grid>
+
+    <!--</ScrollView>-->
+</ContentPage>
+<!-- In your MainPage.xaml -->
+<!-- Flyout Menu -->

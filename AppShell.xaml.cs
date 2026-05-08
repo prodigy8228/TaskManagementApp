@@ -8,6 +8,7 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
         Routing.RegisterRoute(nameof(TaskTypePage), typeof(TaskTypePage));
+        Routing.RegisterRoute(nameof(DraftTaskPage), typeof(DraftTaskPage));
         Routing.RegisterRoute(nameof(BackupRestorePage), typeof(BackupRestorePage));
         Routing.RegisterRoute(nameof(SettingPage), typeof(SettingPage));
         Routing.RegisterRoute(nameof(DetailsPage), typeof(DetailsPage));

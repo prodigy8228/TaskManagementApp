@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:vm="clr-namespace:TaskManagement.ViewModel"
+             x:DataType="vm:SignInViewModel"
+             x:Class="TaskManagement.View.SignInPage">
+
+    <!-- 1. Declare the converter as a resource -->
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <VerticalStackLayout Spacing="15" Padding="40" VerticalOptions="Center">
+        <Label Text="Welcome Back" FontSize="24" HorizontalOptions="Center" FontAttributes="Bold"/>
+
+        <Entry Placeholder="Email" Text="{Binding Email}" Keyboard="Email" />
+        <Entry Placeholder="Password" Text="{Binding Password}" IsPassword="True" />
+
+        <!-- 2. Now StaticResource can find "InvertedBoolConverter" -->
+        <Button Text="Sign In" 
+                Command="{Binding SignInCommand}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                HeightRequest="50" Margin="0,10,0,0"/>
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" HorizontalOptions="Center" />
+    </VerticalStackLayout>
+</ContentPage>

@@ -1,8 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
+		<IntermediateOutputPath>C:\temp\obj\$(MSBuildProjectName)\</IntermediateOutputPath>
+		<XamarinBuildDownloadUser7ZipPath>D:\7z.exe</XamarinBuildDownloadUser7ZipPath>
+		<TargetFrameworks>net9.0-android</TargetFrameworks>
+		<!-- <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks> -->
+		<!-- <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks> -->
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
 
@@ -35,8 +38,10 @@
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">35.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">34.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+		<AndroidMinSdkVersion>21</AndroidMinSdkVersion>
+<AndroidTargetSdkVersion>34</AndroidTargetSdkVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 		<MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
@@ -50,6 +55,7 @@
 		<AndroidSigningStorePass>Prod8228@</AndroidSigningStorePass>
 		<AndroidSigningKeyAlias>sprinty_key</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>Prod8228@</AndroidSigningKeyPass>
+		<NoWarn>1701;1702;NU1902</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
@@ -58,6 +64,31 @@
 	  <AndroidSigningStorePass>Prod8228@</AndroidSigningStorePass>
 	  <AndroidSigningKeyAlias>sprinty_key</AndroidSigningKeyAlias>
 	  <AndroidSigningKeyPass>Prod8228@</AndroidSigningKeyPass>
+	  <NoWarn>1701;1702;NU1902</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+	  <NoWarn>1701;1702;NU1902</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-maccatalyst|AnyCPU'">
+	  <NoWarn>1701;1702;NU1902</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-windows10.0.19041.0|AnyCPU'">
+	  <NoWarn>1701;1702;NU1902</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+	  <NoWarn>1701;1702;NU1902</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-maccatalyst|AnyCPU'">
+	  <NoWarn>1701;1702;NU1902</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-windows10.0.19041.0|AnyCPU'">
+	  <NoWarn>1701;1702;NU1902</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -81,10 +112,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <AndroidResource Remove="Platforms\Android\Resources\drawable\ic_notification.png" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <Compile Remove="ViewModel\MyPopupViewModel.cs" />
 	  <Compile Remove="View\MyPopup.xaml.cs" />
 	  <Compile Remove="View\NewPage1.xaml.cs" />
@@ -97,6 +124,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Platforms\Android\google-services.json" />
+	  <None Remove="Platforms\Android\Resources\drawable\ic_notification.png" />
+	  <None Remove="Platforms\Android\Resources\values\strings.xml" />
 	  <None Remove="Resources\AppIcon\appicon.svg" />
 	  <None Remove="Resources\AppIcon\appiconfg.svg" />
 	  <None Remove="Resources\AppIcon\ic_launcher.png" />
@@ -115,13 +145,18 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Plugin.Firebase" Version="4.2.1" />
+		<PackageReference Include="Plugin.Firebase.Auth" Version="5.0.1" />
+		<PackageReference Include="Plugin.Firebase.Firestore" Version="4.0.0" />
 		<PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
-		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Compile Update="View\DetailsPage.xaml.cs">
 	    <DependentUpon>DetailsPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="View\DraftTaskPage.xaml.cs">
+	    <DependentUpon>DraftTaskPage.xaml</DependentUpon>
 	  </Compile>
 	  <Compile Update="View\SettingPage.xaml.cs">
 	    <DependentUpon>SettingPage.xaml</DependentUpon>
@@ -135,10 +170,16 @@
 	  <MauiXaml Update="View\DetailsPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="View\DraftTaskPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="View\MainPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="View\SettingPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="View\SignIn.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="View\TaskTypePage.xaml">
@@ -155,8 +196,20 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
-		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.8.7.2" />
-		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime" Version="2.8.7.2" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.8.7.4" />
+		<PackageReference Include="Xamarin.AndroidX.Activity" Version="1.10.1.2" />
+		<PackageReference Include="Xamarin.AndroidX.Activity.Ktx" Version="1.10.1.2" />
+		<PackageReference Include="Xamarin.AndroidX.Fragment" Version="1.8.6.2" />
+		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.8.6.2" />
+
+		<!-- 2. Collection (Bumped to 1.5.0.2 to stop the downgrade error) -->
+		<PackageReference Include="Xamarin.AndroidX.Collection.Jvm" Version="1.5.0.2" />
+		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.5.0.2" />
+
+		<!-- 3. Lifecycle (Locked to newest) -->
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime" Version="2.8.7.4" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Ktx" Version="2.8.7.4" />
+
 		<PackageReference Include="Xamarin.AndroidX.Media3.Common">
 	    <Version>1.6.1.1</Version>
 	  </PackageReference>
@@ -170,6 +223,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <GoogleServicesJson Include="Platforms\Android\google-services.json" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <MauiIcon Include="Resources\AppIcon\ic_launcher.png" />
 	</ItemGroup>
 
@@ -178,8 +235,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="Platforms\Android\Resources\drawable\ic_notification.png">
+	  <AndroidResource Update="Platforms\Android\Resources\drawable\ic_notification.png">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
+	  </AndroidResource>
 	</ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ using TaskManagement.Platforms;
 namespace TaskManagement.ViewModel;
 
 [QueryProperty(nameof(TaskRecord), "TaskRecord")]
-public partial class TaskDetailsViewModel : BaseViewModel
+public partial class TaskDetailsViewModel : ObservableObject
 {
     public bool IsAndroid => DeviceInfo.Platform == DevicePlatform.Android;
     public bool IsWindows => DeviceInfo.Platform == DevicePlatform.WinUI;
@@ -19,41 +19,76 @@ public partial class TaskDetailsViewModel : BaseViewModel
     public List<RepeatOption> RepeatOptions { get; } =
          Enum.GetValues(typeof(RepeatOption)).Cast<RepeatOption>().ToList();
 
-
+    [ObservableProperty]
+    private bool isBusy;
+    [ObservableProperty]
+    private DateTime _selectedDate = DateTime.Today;
     readonly ISpeechToText speechToText;
     readonly CancellationTokenSource tokenSource;
-    MISDatabase taskService;
-
     //private DateTime _selectedDate = DateTime.Now;
-    private DateTime _selectedDate;
+    // private DateTime _selectedDate;
     public ObservableCollection<TaskRecord> TaskRecords { get; set; }
 
-    [ObservableProperty]
+    // In TaskDetailsViewModel.cs
     private TaskRecord _taskRecord;
-    public Boolean isAdmin { get; set; } = false;
-    public ObservableCollection<CommentRecord> Comments { get; set; }
-    public TaskDetailsViewModel()
+
+
+    public TaskRecord TaskRecord
     {
-        this.TaskService = new MISDatabase();
-        if (GlobalVariables.userid == "Admin")
+        get => _taskRecord;
+        set
         {
-            isAdmin = true;
+            // Use the Toolkit's SetProperty to avoid ambiguity
+            if (SetProperty(ref _taskRecord, value))
+            {
+                if (_taskRecord != null)
+                {
+                    // 🔥 Safely handle null dates from Firebase
+                    if (_taskRecord.task_due_date.HasValue)
+                    {
+                        SelectedDate = _taskRecord.task_due_date.Value.ToLocalTime().Date;
+                    }
+                    else
+                    {
+                        // If null in DB, default the DatePicker UI to show today
+                        SelectedDate = DateTime.Today;
+                    }
+                }
+                // This tells the UI to re-check the delete button visibility
+                OnPropertyChanged(nameof(isDraft));
+                OnPropertyChanged(nameof(isAdmin));
+            }
         }
-        else
-        {
-            isAdmin = false;
-        }
+    }
+
+    // Use a safe comparison (handles nulls and type differences)
+    public bool isDraft => TaskRecord?.userId?.ToString() == GlobalVariables.userId?.ToString();
+
+
+    // public Boolean isAdmin { get; set; } = false;
+    public bool isAdmin => GlobalVariables.role == "Admin";
+    private readonly IFirestoreService _fService;
+    public TaskDetailsViewModel(IFirestoreService fService)
+    {
+        _fService = fService;
         this.speechToText = DependencyService.Get<ISpeechToText>();
 #if ANDROID
         speechToText = new SpeechToTextImplementation();
 #endif
         this.tokenSource = new CancellationTokenSource();
         this.Description = TaskRecord?.task_description ?? string.Empty;
+        this.PendingDescription = TaskRecord?.pending_description ?? string.Empty;
+
+        // 3. Notify the UI properties
+
         this.TaskTitle = TaskRecord?.task_title ?? string.Empty;
         this.IsCompleted = TaskRecord?.IsCompleted ?? false;
     }
+
     [ObservableProperty]
     string? description;
+    [ObservableProperty]
+    string? pendingDescription;
 
     [ObservableProperty]
     string? taskTitle;
@@ -178,6 +213,26 @@ public partial class TaskDetailsViewModel : BaseViewModel
         tokenSource?.Cancel();
     }
 
+
+    partial void OnSelectedDateChanged(DateTime value)
+    {
+        if (TaskRecord != null)
+        {
+            // Option A: If you want to allow clearing the date in Firebase
+            if (value == DateTime.MinValue)
+            {
+                TaskRecord.task_due_date = null;
+            }
+            else
+            {
+                // Pushes the 12:00 PM buffer to Firebase
+                DateTime localNoon = value.Date.AddHours(12);
+                TaskRecord.task_due_date = new DateTimeOffset(localNoon);
+            }
+        }
+    }
+
+    /*
     public DateTime? SelectedDate
     {
         get => SelectedDate1;
@@ -197,12 +252,14 @@ public partial class TaskDetailsViewModel : BaseViewModel
 
         }
     }
+    */
+
     public ObservableCollection<TaskType> TaskTypes { get; set; } = new ObservableCollection<TaskType>();
 
     [RelayCommand]
     async Task LoadUsersAsync()
     {
-        var taskTypes = await taskService.GetTaskTypesAsync(); // Fetch users from database/API
+        var taskTypes = await _fService.GetTaskTypesAsync(); // Fetch users from database/API
         taskTypes = taskTypes.Where(o => o.sort_order == 1).ToList();
 
 
@@ -214,6 +271,38 @@ public partial class TaskDetailsViewModel : BaseViewModel
         SelectedTaskType = TaskRecord?.task_type_id == null
             ? taskTypes.FirstOrDefault()
             : taskTypes.FirstOrDefault(u => u.task_type_id == TaskRecord.task_type_id);
+    }
+    public ObservableCollection<User> Assignees { get; set; } = new ObservableCollection<User>();
+    public User SelectedAssignee1 { get => _selectedAssignee; set => _selectedAssignee = value; }
+    private User _selectedAssignee;
+    public User SelectedAssignee
+    {
+        get => SelectedAssignee1;
+        set
+        {
+            SelectedAssignee1 = value;
+            OnPropertyChanged();
+            // Update TaskRecord.Assignee when user selection changes
+            if (TaskRecord != null && SelectedAssignee1 != null)
+            {
+                TaskRecord.assignee_id = SelectedAssignee1?.Id ?? "";
+            }
+        }
+    }
+    [RelayCommand]
+    async Task LoadAssigneeAsync()
+    {
+        var assignees = await _fService.GetAssigneeAsync(); // Fetch users from database/API
+                                                            //assignees = assignees.ToList();
+
+        Assignees.Clear();
+        foreach (var assignee in assignees)
+        {
+            Assignees.Add(assignee); // Populate the dropdown dynamically
+        }
+        SelectedAssignee = TaskRecord?.assignee_id == null
+            ? assignees.FirstOrDefault()
+            : assignees.FirstOrDefault(u => u.Id == TaskRecord.assignee_id);
     }
     public TaskType SelectedTaskType1 { get => _selectedTaskType; set => _selectedTaskType = value; }
     private TaskType _selectedTaskType;
@@ -234,6 +323,8 @@ public partial class TaskDetailsViewModel : BaseViewModel
     [ObservableProperty]
     private bool isCompleted;
 
+
+
     [RelayCommand]
     async Task SaveDetailsAsync()
     {
@@ -250,9 +341,24 @@ public partial class TaskDetailsViewModel : BaseViewModel
             TaskRecord.task_type_id = SelectedTaskType?.task_type_id ?? 2;
             TaskRecord.IsCompleted = IsCompleted;
             Console.WriteLine($"TaskRecord.task_id: {TaskRecord.task_id}");
+            if (TaskRecord.task_title.Trim() == "")
+            {
+                await Shell.Current.DisplayAlert("Error!", "Task title cannot be empty.", "OK");
+                return;
+            }
+
             if (TaskRecord.task_id == 0)
             {
-                var response = await taskService.SaveItemAsync(TaskRecord);
+                var response = 0;
+                if (GlobalVariables.role == "Admin")
+                {
+                    response = await _fService.SaveItemAsync(TaskRecord);
+                }
+                else
+                {
+                    response = await _fService.SaveDraftItemAsync(TaskRecord);
+                }
+
                 if (response == 1)
                 {
                     Console.WriteLine("Task added successfully!");
@@ -265,7 +371,24 @@ public partial class TaskDetailsViewModel : BaseViewModel
             else
             {
                 Console.WriteLine(TaskRecord.IsCompleted.ToString() + " ......");
-                var response = await taskService.UpdateItemAsync(TaskRecord);
+
+                var response = 0;
+                if (GlobalVariables.role == "Admin")
+                {
+                    response = await _fService.UpdateItemAsync(TaskRecord);
+                }
+                else
+                {
+                    if (GlobalVariables.userId != TaskRecord.userId)
+                    {
+
+                        response = await _fService.UpdateItemDescAsync(TaskRecord);
+                    }
+                    else
+                    {
+                        response = await _fService.UpdateDraftItemAsync(TaskRecord);
+                    }
+                }
                 if (response == 1)
                 {
                     Console.WriteLine("Task updated successfully!");
@@ -285,9 +408,10 @@ public partial class TaskDetailsViewModel : BaseViewModel
         {
             IsBusy = false;
         }
-        // TaskRecords = new ObservableCollection<TaskRecord>(await taskService.GetTaskRecords());
+        //TaskRecords = new ObservableCollection<TaskRecord>(await App.Firestore.GetItemsAsync());
         //  IsCompleted = false; // Reset completion status after saving
-        await Shell.Current.GoToAsync("..");
+        // await Task.Delay(3500);
+        await Shell.Current.GoToAsync("..?refresh=true");
     }
 
 
@@ -336,7 +460,7 @@ public partial class TaskDetailsViewModel : BaseViewModel
             using var stream = await fileResult.OpenReadAsync();
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
-            TaskRecord.file_data_image = ms.ToArray();
+            TaskRecord.file_data_image1 = ms.ToArray();
 
             Filename_image = fileResult.FileName;
             TaskRecord.file_name_image = Filename_image;
@@ -364,7 +488,8 @@ public partial class TaskDetailsViewModel : BaseViewModel
             using var stream = await file.OpenReadAsync();
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
-            TaskRecord.file_data_image = memoryStream.ToArray(); // Store file data
+            TaskRecord.file_data_image1 = memoryStream.ToArray(); // Store file data
+            TaskRecord.file_data_image = "";
             ImageFileExist = true;
             OnPropertyChanged(nameof(Filename_image));
             OnPropertyChanged(nameof(ImageFileExist));
@@ -407,7 +532,7 @@ public partial class TaskDetailsViewModel : BaseViewModel
             using var stream = await fileResult.OpenReadAsync();
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
-            TaskRecord.file_data_video = memoryStream.ToArray(); // Store file data
+            TaskRecord.file_data_video1 = memoryStream.ToArray(); // Store file data
             VideoFileExist = true;
             OnPropertyChanged(nameof(Filename_video));
             OnPropertyChanged(nameof(VideoFileExist));
@@ -435,12 +560,44 @@ public partial class TaskDetailsViewModel : BaseViewModel
             using var stream = await file2.OpenReadAsync();
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
-            TaskRecord.file_data_video = memoryStream.ToArray(); // Store file data
+            TaskRecord.file_data_video1 = memoryStream.ToArray(); // Store file data
             VideoFileExist = true;
             OnPropertyChanged(nameof(Filename_video));
             OnPropertyChanged(nameof(VideoFileExist));
         }
 #endif
+    }
+
+
+    [RelayCommand]
+    async Task AcceptedTaskRecordAsync()
+    {
+        if (IsBusy)
+            return;
+        try
+        {
+            IsBusy = true;
+            if (TaskRecord != null)
+            {
+                TaskRecord.task_title = TaskTitle;
+                TaskRecord.task_description = TaskRecord.pending_description;
+                TaskRecord.pending_description = "";
+                TaskRecord.task_type_id = SelectedTaskType?.task_type_id ?? 2;
+                TaskRecord.IsCompleted = IsCompleted;
+            }
+            var acceptResponse = await _fService.UpdateItemAsync(TaskRecord);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Unable to mearge taskRecords: {ex.Message}");
+            await Shell.Current.DisplayAlert("Error!", ex.Message, "OK");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        await Shell.Current.GoToAsync("..?refresh=true");
     }
 
     [RelayCommand]
@@ -452,7 +609,7 @@ public partial class TaskDetailsViewModel : BaseViewModel
         {
             IsBusy = true;
 
-            var delResponse = await taskService.DeleteItemAsync(TaskRecord);
+            var delResponse = await _fService.DeleteItemAsync(TaskRecord);
             //TaskRecords.Remove(TaskRecord);
 
         }
@@ -470,12 +627,7 @@ public partial class TaskDetailsViewModel : BaseViewModel
         await Shell.Current.GoToAsync("..");
     }
 
-    public MISDatabase TaskService { get => taskService; set => taskService = value; }
-    public DateTime SelectedDate1
-    {
-        get => _selectedDate;
-        set => _selectedDate = value;
-    }
+
     public TaskRecord TaskRecord1 { get => TaskRecord; set => TaskRecord = value; }
     public string Filename_image1 { get => Filename_image; set => Filename_image = value; }
     public bool ImageFileExist1 { get => ImageFileExist; set => ImageFileExist = value; }

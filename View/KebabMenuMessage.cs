@@ -1,9 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
 
-namespace TaskManagement.View
+namespace TaskManagement.View;
+
+public class KebabMenuMessage : ValueChangedMessage<string>
 {
-    public class KebabMenuMessage : ValueChangedMessage<string>
-    {
-        public KebabMenuMessage(string value) : base(value) { }
-    }
+    public KebabMenuMessage(string value) : base(value) { }
 }

@@ -53,14 +53,15 @@ public partial class BackupRestoreViewModel : BaseViewModel
     [RelayCommand]
     async Task ConfirmSelectionAsync()
     {
-        var sourcePath = Constants.DatabasePath;
+        var sourcePath = "";    //Constants.DatabasePath;
         if (SelectedOption == BackupOption.Backup)
         {
 
             // ConfirmationMessage = "Database Backup succesfully taken at";
 #if ANDROID
             string downloadsPath = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDownloads).AbsolutePath; // Fully qualify Android.OS.Environment to resolve ambiguity
-            string targetPath = Path.Combine(downloadsPath, Constants.DatabaseFilename);
+          //  string targetPath = Path.Combine(downloadsPath, Constants.DatabaseFilename);
+             string targetPath = Path.Combine(downloadsPath, "");
             var status = await Permissions.RequestAsync<Permissions.StorageWrite>();
             if (status != PermissionStatus.Granted)
             {
@@ -83,7 +84,8 @@ public partial class BackupRestoreViewModel : BaseViewModel
         {
 #if ANDROID
             string downloadsPath = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDownloads).AbsolutePath; // Fully qualify Android.OS.Environment to resolve ambiguity
-            string backupPath = Path.Combine(downloadsPath, Constants.DatabaseFilename);
+           //string backupPath = Path.Combine(downloadsPath, Constants.DatabaseFilename);
+            string backupPath = Path.Combine(downloadsPath, "");
             var status = await Permissions.RequestAsync<Permissions.StorageWrite>();
             if (status != PermissionStatus.Granted)
             {
