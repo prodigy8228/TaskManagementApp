@@ -1,0 +1,23 @@
+name: Daily Overdue Task Check
+on:
+  schedule:
+    - cron: '0 8 * * *' # Runs every day at 8:00 AM UTC
+  workflow_dispatch: # Allows you to run it manually for testing
+
+jobs:
+  check-overdue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Dependencies
+        run: npm install firebase-admin
+      - name: Run Notification Script
+        run: node notify.js
+        env:
+          # Secret stored in GitHub Settings -> Secrets and variables -> Actions
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
